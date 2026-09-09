@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open Model Landscape — Complete Reference</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#12151a; --panel2:#171b21; --border:#242a33;
+    --text:#e6e9ee; --muted:#9aa4b2; --accent:#b48cff; --accent2:#d4bbff;
+    --link:#7cc4ff; --warn:#f2b84b; --code:#1a1f26;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 90px; margin-left:280px;}
+  header.hero{
+    background:linear-gradient(135deg,#191529,#0b0d10 70%);
+    border:1px solid var(--border); border-radius:16px;
+    padding:36px 32px; margin-bottom:28px; scroll-margin-top:20px;
+  }
+  header.hero h1{margin:0 0 8px; font-size:2.2rem; letter-spacing:-0.02em; color:var(--accent2);}
+  header.hero p.tag{color:var(--muted); margin:0; font-size:1.05rem}
+  .sidebar{
+    position:fixed; top:0; left:0; width:260px; height:100vh; overflow-y:auto;
+    background:var(--panel); border-right:1px solid var(--border);
+    padding:22px 14px 40px; box-sizing:border-box; z-index:40;
+  }
+  .sidebar-title{color:var(--accent2); font-weight:700; font-size:1.05rem; margin-bottom:2px; font-family:monospace;}
+  .sidebar-sub{color:var(--muted); font-size:.7rem; margin-bottom:18px; line-height:1.4;}
+  .sidebar a{
+    display:block; padding:7px 10px; margin-bottom:2px; border-radius:6px;
+    color:var(--text); text-decoration:none; font-size:.8rem; font-family:monospace;
+    border-left:2px solid transparent; white-space:normal;
+  }
+  .sidebar a:hover{background:var(--panel2); color:var(--accent2); border-left-color:var(--accent);}
+  .scroll-btns{position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:10px; z-index:50;}
+  .scroll-btns a{
+    background:var(--accent); color:#0d1117; font-weight:700; text-decoration:none;
+    width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.45); font-size:1.2rem; font-family:monospace;
+  }
+  .scroll-btns a:hover{background:var(--accent2);}
+  @media(max-width:900px){
+    .sidebar{position:static; width:auto; height:auto; border-right:none; border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; gap:6px;}
+    .sidebar-title,.sidebar-sub{width:100%;}
+    .wrap{margin-left:auto;}
+  }
+  section{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:26px 28px; margin-bottom:22px; scroll-margin-top:20px;
+  }
+  section h2{color:var(--accent2); font-size:1.35rem; margin-top:0; border-bottom:1px solid var(--border); padding-bottom:10px;}
+  section h3{color:var(--text); font-size:1.05rem; margin-bottom:6px}
+  p{color:var(--text)}
+  .muted{color:var(--muted)}
+  a{color:var(--link)}
+  code, .mono{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--code); padding:1px 6px; border-radius:4px; font-size:.88em; color:#d9e3ea;
+  }
+  pre{background:var(--code); border:1px solid var(--border); border-radius:10px; padding:16px; overflow-x:auto; font-size:.85rem;}
+  pre code{background:none; padding:0}
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.86rem}
+  th,td{border:1px solid var(--border); padding:7px 9px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2); font-weight:600}
+  tr:nth-child(even) td{background:#101318}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+  .card{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
+  .badge{
+    display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:10px;
+    background:#221a30; color:var(--accent2); border:1px solid #382a4a; margin-left:6px;
+  }
+  .badge.license-open{background:#0f1f14; color:#8fe89f; border-color:#1e3d27}
+  .badge.license-custom{background:#2a1a10; color:var(--warn); border-color:#4a3419}
+  ul{padding-left:20px}
+  li{margin-bottom:5px}
+  .callout{border-left:3px solid var(--accent); background:#150f1f; padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0; font-size:.92rem;}
+  .callout.warn{border-left-color:var(--warn); background:#191207}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <a href="../index.html" class="sidebar-title" style="text-decoration:none;display:block;">Open Model Landscape</a>
+  <div class="sidebar-sub">Updated 2026-09-09</div>
+  <a href="#top">↑ Top</a>
+  <a href="#what">1 · What &amp; Why</a>
+  <a href="#families">2 · Model Families</a>
+  <a href="#licenses">3 · License Comparison</a>
+  <a href="#architecture">4 · Architecture: Dense vs MoE</a>
+  <a href="#leaderboards">5 · Cross-Family Leaderboards</a>
+  <a href="#choosing">6 · How to Choose</a>
+  <a href="#resources">7 · Resources</a>
+  <a href="#bottom">↓ Bottom</a>
+</nav>
+
+<div class="scroll-btns">
+  <a href="#top" title="Back to top">↑</a>
+  <a href="#bottom" title="Jump to bottom">↓</a>
+</div>
+
+<div class="wrap">
+
+<header class="hero" id="top">
+  <h1>Open Model Landscape</h1>
+  <p class="tag">Cross-vendor comparison of major open-weight LLM families — licenses, architectures, benchmarks, and what actually matters when picking one — updated 2026-09-09. Public web research only — no NVIDIA-internal content.</p>
+</header>
+
+<!-- 1. WHAT / WHY -->
+<section id="what">
+  <h2>1. What is this, and why does it matter?</h2>
+  <p>"Open-weight" doesn't mean one thing — licenses range from truly permissive (Apache 2.0, MIT) to gated/custom terms with usage caps. This page tracks the major families people actually deploy against each other: what they cost to run, what license risk they carry, and how they're architected (dense vs. Mixture-of-Experts).</p>
+  <div class="callout warn">Benchmark numbers in the open-model space move fast and are frequently gamed (see the Llama 4 Maverick LMArena controversy in §5). Treat any single leaderboard number as a snapshot, not gospel — cross-check against the primary source (official model card / official leaderboard site) before using a number to make a real decision.</div>
+</section>
+
+<!-- 2. FAMILIES -->
+<section id="families">
+  <h2>2. Model families</h2>
+
+  <h3>Meta Llama (Llama 4)</h3>
+  <table>
+    <tr><th>Flagship</th><td>Llama 4 Maverick — 400B total / 17B active (128 experts), MoE. Llama 4 Scout — 109B total / 17B active (16 experts).</td></tr>
+    <tr><th>Context</th><td>Maverick 1M tokens; Scout 10M tokens.</td></tr>
+    <tr><th>License</th><td><span class="badge license-custom">custom</span> Llama 4 Community License — free commercial use except companies &gt;700M MAU (need separate Meta license); EU restriction on multimodal features. Not OSI-approved open source despite "open" branding.</td></tr>
+    <tr><th>Benchmarks</th><td>Meta's style-tuned "03-26-Experimental" variant scored 1417 Elo on LMArena; the actual public release ranks far lower (~32nd) once style-control is applied — a widely-cited benchmark-gaming controversy.</td></tr>
+    <tr><th>Why it matters</th><td>Largest tooling/inference-stack ecosystem of any open-weight family, despite the non-open license.</td></tr>
+    <tr><th>Links</th><td><a href="https://github.com/meta-llama/llama-models" target="_blank">github.com/meta-llama/llama-models</a></td></tr>
+  </table>
+
+  <h3>Alibaba Qwen (Qwen3 / Qwen3.6)</h3>
+  <table>
+    <tr><th>Flagship</th><td>Qwen3-235B-A22B (235B total / 22B active, MoE); dense variants also offered (32B/8B/4B/0.6B). Newer Qwen3.6-35B-A3B.</td></tr>
+    <tr><th>Context</th><td>32,768 native, extendable to 131,072 via YaRN (Qwen3); Qwen3.6-35B-A3B up to ~1M via extension.</td></tr>
+    <tr><th>License</th><td><span class="badge license-open">Apache 2.0</span> across the family — one of the most permissive of the major players.</td></tr>
+    <tr><th>Why it matters</th><td>Strong multilingual performance + fully permissive license drives heavy enterprise/community adoption. Both dense and MoE variants let you pick the right shape for your deployment.</td></tr>
+    <tr><th>Links</th><td><a href="https://huggingface.co/Qwen/Qwen3-235B-A22B" target="_blank">huggingface.co/Qwen</a>, <a href="https://github.com/QwenLM/Qwen3" target="_blank">github.com/QwenLM/Qwen3</a></td></tr>
+  </table>
+
+  <h3>DeepSeek (V3 / R1)</h3>
+  <table>
+    <tr><th>Flagship</th><td>DeepSeek-V3 — 671B total / 37B active, MoE with Multi-head Latent Attention (MLA) + auxiliary-loss-free load balancing. R1 = V3-Base + RL for reasoning.</td></tr>
+    <tr><th>Context</th><td>128K tokens.</td></tr>
+    <tr><th>License</th><td><span class="badge license-open">MIT</span> (code); model weights under a separate DeepSeek license permitting commercial use.</td></tr>
+    <tr><th>Training cost claim</th><td>~2.788M H800 GPU-hours, reported at roughly <strong>$5.6M</strong> — the claim that triggered the "DeepSeek moment" in the industry (proof frontier-class reasoning could be trained far cheaper than assumed).</td></tr>
+    <tr><th>Benchmarks</th><td>R1 vs OpenAI o1: AIME 2024 79.8% vs 79.2% (R1 ahead); MATH-500 97.3% (R1 leads); MMLU 90.8% vs 91.8% (o1 slightly ahead). Source figures aggregated from secondary comparisons — verify against the <a href="https://arxiv.org/html/2501.12948v1" target="_blank">original arXiv paper</a> before quoting.</td></tr>
+    <tr><th>Links</th><td><a href="https://github.com/deepseek-ai/DeepSeek-V3" target="_blank">github.com/deepseek-ai/DeepSeek-V3</a>, <a href="https://huggingface.co/deepseek-ai/DeepSeek-R1" target="_blank">huggingface.co/deepseek-ai/DeepSeek-R1</a></td></tr>
+  </table>
+
+  <h3>Google Gemma (Gemma 3)</h3>
+  <table>
+    <tr><th>Sizes</th><td>270M, 1B, 4B, 12B, 27B — dense transformer, multimodal (text+image in, text out) at larger sizes.</td></tr>
+    <tr><th>Context</th><td>128K tokens. 140+ languages supported.</td></tr>
+    <tr><th>License</th><td><span class="badge license-custom">custom</span> Gemma Terms of Use — gated on Hugging Face, requires accepting Google's usage terms; not a standard OSI license.</td></tr>
+    <tr><th>Why it matters</th><td>Strong small-model efficiency line (270M-27B) aimed squarely at on-device/edge deployment.</td></tr>
+    <tr><th>Links</th><td><a href="https://huggingface.co/google/gemma-3-27b-it" target="_blank">huggingface.co/google/gemma-3-27b-it</a></td></tr>
+  </table>
+
+  <h3>Mistral (Large 3 / historical Mixtral)</h3>
+  <table>
+    <tr><th>Flagship</th><td>Mistral Large 3 (Dec 2025) — 675B total, ~39-41B active (sources vary — confirm on HF card), MoE.</td></tr>
+    <tr><th>Context</th><td>256K tokens.</td></tr>
+    <tr><th>License</th><td><span class="badge license-open">Apache 2.0</span> — a shift to full permissiveness for the flagship release (verify on HF card before relying on this).</td></tr>
+    <tr><th>Historical</th><td>Mixtral 8x7B (45B total/13B active) and 8x22B (176B total/44B active) — both Apache 2.0, early proof points for open MoE.</td></tr>
+    <tr><th>Why it matters</th><td>European lab; first to popularize open MoE via Mixtral; Large 3 returns to fully permissive licensing at frontier scale.</td></tr>
+    <tr><th>Links</th><td><a href="https://huggingface.co/mistralai/Mistral-Large-3-675B-Instruct-2512" target="_blank">huggingface.co/mistralai</a></td></tr>
+  </table>
+
+  <h3>Zhipu GLM (GLM-4.6 / GLM-5.x)</h3>
+  <table>
+    <tr><th>Flagship</th><td>GLM-5 — 744B total / 40B active, MoE, 200K context. GLM-5.2 extends to ~1M context for agentic/long-horizon coding. GLM-4.6 — 355B total MoE, 200K context.</td></tr>
+    <tr><th>License</th><td><span class="badge license-open">MIT</span> across the family — notably permissive for frontier-scale (700B+) models.</td></tr>
+    <tr><th>Benchmarks</th><td>GLM-5.3-Flash reported top-ranked open-source model on Artificial Analysis (score 0.570) — single third-party snapshot, not independently cross-verified here; pull live from artificialanalysis.ai before quoting.</td></tr>
+    <tr><th>Why it matters</th><td>Chinese lab producing some of the largest fully MIT-licensed open-weight models; strong coding/agentic positioning.</td></tr>
+    <tr><th>Links</th><td><a href="https://huggingface.co/zai-org/GLM-4.6" target="_blank">huggingface.co/zai-org/GLM-4.6</a></td></tr>
+  </table>
+
+  <h3>xAI Grok (open-weight releases only)</h3>
+  <table>
+    <tr><th>Grok-1</th><td>314B MoE, released under <span class="badge license-open">Apache 2.0</span> — genuinely open source.</td></tr>
+    <tr><th>Grok-2</th><td>Released under the more restrictive "Grok 2 Community License" — <span class="badge license-custom">custom</span>, research-first, commercial use gated behind xAI guardrails.</td></tr>
+    <tr><th>Flag</th><td>Grok is the one family here that moved from fully permissive to more restrictive licensing between releases — a license-trend counter-example worth noting. No open-weight release of the current frontier Grok model was found; only Grok-1 and Grok-2 have public weights.</td></tr>
+    <tr><th>Links</th><td><a href="https://huggingface.co/xai-org/grok-1" target="_blank">huggingface.co/xai-org/grok-1</a>, <a href="https://huggingface.co/xai-org/grok-2" target="_blank">huggingface.co/xai-org/grok-2</a></td></tr>
+  </table>
+
+  <h3>Other notable families</h3>
+  <div class="grid2">
+    <div class="card"><strong>Microsoft Phi-4</strong><p class="muted">Dense, MIT. Phi-4 base = 14B/16K context; Phi-4-mini = 3.8B/128K; Phi-4-Reasoning-Vision-15B (Mar 2026) = 15B/16K. "Small model punches above its weight" story.</p></div>
+    <div class="card"><strong>Allen Institute OLMo</strong><p class="muted">Apache 2.0, the most transparent family here — ships pretraining data + training/eval code + checkpoints + logs, not just weights. OLMo 3 (Nov 2025): 7B and 32B variants.</p></div>
+    <div class="card"><strong>TII Falcon</strong><p class="muted">Apache 2.0, early entrant from UAE's Technology Innovation Institute — historically important, less prominent in 2026 rankings.</p></div>
+    <div class="card"><strong>01.AI Yi</strong><p class="muted">Apache 2.0, 6B/9B/34B — noted for strong bilingual Chinese/English performance.</p></div>
+    <div class="card"><strong>Moonshot Kimi K3</strong><p class="muted">New entrant (weights released 2026-07-27). Reported #1 on LMArena's Frontend Code Arena (1,679 Elo) — first open model to top a coding leaderboard. Artificial Analysis Intelligence Index ~57.</p></div>
+  </div>
+</section>
+
+<!-- 3. LICENSES -->
+<section id="licenses">
+  <h2>3. License comparison — read the fine print</h2>
+  <p>"Open weight" spans a real spectrum. This is the single most important thing to check before betting a production system on any of these.</p>
+  <table>
+    <tr><th>Family</th><th>License</th><th>Genuinely permissive?</th><th>Key restriction</th></tr>
+    <tr><td>Llama 4</td><td>Llama 4 Community License</td><td><span class="badge license-custom">No</span></td><td>&gt;700M MAU needs separate Meta license; EU multimodal restriction</td></tr>
+    <tr><td>Qwen3</td><td>Apache 2.0</td><td><span class="badge license-open">Yes</span></td><td>None significant</td></tr>
+    <tr><td>DeepSeek V3/R1</td><td>MIT (code) + DeepSeek model license</td><td><span class="badge license-open">Mostly</span></td><td>Model license is separate from code license — check both</td></tr>
+    <tr><td>Gemma 3</td><td>Gemma Terms of Use</td><td><span class="badge license-custom">No</span></td><td>Gated acceptance required on HF; custom, not OSI-approved</td></tr>
+    <tr><td>Mistral Large 3</td><td>Apache 2.0 (verify)</td><td><span class="badge license-open">Yes</span></td><td>Confirm on official HF card before relying on this</td></tr>
+    <tr><td>GLM-5.x</td><td>MIT</td><td><span class="badge license-open">Yes</span></td><td>None significant — notable for a 700B+ model</td></tr>
+    <tr><td>Grok-1</td><td>Apache 2.0</td><td><span class="badge license-open">Yes</span></td><td>None significant</td></tr>
+    <tr><td>Grok-2</td><td>Grok 2 Community License</td><td><span class="badge license-custom">No</span></td><td>Research-first, commercial use gated by xAI</td></tr>
+    <tr><td>Phi-4</td><td>MIT</td><td><span class="badge license-open">Yes</span></td><td>None significant</td></tr>
+    <tr><td>OLMo 3</td><td>Apache 2.0</td><td><span class="badge license-open">Yes</span></td><td>None — also ships full training data/code, unusually transparent</td></tr>
+  </table>
+</section>
+
+<!-- 4. ARCHITECTURE -->
+<section id="architecture">
+  <h2>4. Architecture: dense vs. Mixture-of-Experts (MoE)</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Dense</h3>
+      <p class="muted">Every parameter activates on every forward pass. Simpler to serve, more predictable latency, but total params = active params = full compute cost. Examples: Gemma 3, Phi-4, OLMo 3, Qwen3 dense variants (32B/8B/4B/0.6B).</p>
+    </div>
+    <div class="card">
+      <h3>MoE</h3>
+      <p class="muted">Only a subset of "expert" sub-networks activate per token — total params can be huge while active (compute) params stay small. Examples: DeepSeek-V3 (671B total/37B active), Llama 4 Maverick (400B/17B), GLM-5 (744B/40B), Mistral Large 3 (675B/~40B). This is why a 671B MoE model can be cheaper to run than its total-param count implies — but still needs enough GPU memory to <em>hold</em> all the experts, even though only a few fire per token.</p>
+    </div>
+  </div>
+  <p class="muted">The trend across 2025-2026: nearly every new frontier-scale open-weight release is MoE — it's become the default way to get more model capacity without proportionally more inference compute.</p>
+</section>
+
+<!-- 5. LEADERBOARDS -->
+<section id="leaderboards">
+  <h2>5. Cross-family leaderboards — and their limits</h2>
+  <ul>
+    <li><strong><a href="https://lmarena.ai" target="_blank">LMArena (LMSYS Chatbot Arena)</a></strong> — live Elo-based rankings from human pairwise votes. As of ~Sept 2026, proprietary models (Claude Opus, GPT-5.5 Pro, Gemini 3.1 Pro) still dominate the top overall, but open-weight Kimi K3 broke into #1 on the Frontend Code Arena sub-leaderboard specifically.</li>
+    <li><strong><a href="https://artificialanalysis.ai" target="_blank">Artificial Analysis</a></strong> — Intelligence Index scoring across quality/speed/price. GLM-5.3-Flash and Kimi K3 rank near the top among open models per secondary reporting — pull live numbers directly from the site before quoting, since aggregator blogs can lag or misreport.</li>
+    <li><strong><a href="https://huggingface.co/spaces/open-llm-leaderboard" target="_blank">Hugging Face Open LLM Leaderboard</a></strong> — historically the standard reference; HF has changed/retired leaderboard formats before, so confirm it's still actively maintained before citing.</li>
+  </ul>
+  <div class="callout warn">The Llama 4 Maverick episode is the cautionary tale here: Meta's submitted "03-26-Experimental" variant scored 1417 Elo (would-be top-tier), but the actual publicly released weights ranked around 32nd once LMArena applied style control — the submitted variant was tuned for benchmark performance, not representative of the shipped model. Always check whether a benchmark number was measured on the model you can actually download.</div>
+</section>
+
+<!-- 6. HOW TO CHOOSE -->
+<section id="choosing">
+  <h2>6. How to choose, practically</h2>
+  <div class="grid3">
+    <div class="card">
+      <h3>License-sensitive deployment</h3>
+      <p class="muted">Favor Qwen3, DeepSeek, GLM-5.x, Mistral Large 3, Grok-1, Phi-4, or OLMo 3 — all Apache 2.0/MIT with no usage-count gates.</p>
+    </div>
+    <div class="card">
+      <h3>Memory-constrained serving</h3>
+      <p class="muted">MoE models need enough GPU memory to hold ALL experts even if only a few fire per token — a 671B-total MoE model still needs multi-GPU memory footprint despite ~37B active compute. Dense small models (Gemma, Phi-4, Qwen3 dense) are simpler to reason about for tight memory budgets.</p>
+    </div>
+    <div class="card">
+      <h3>Full transparency / research use</h3>
+      <p class="muted">OLMo 3 is the only family here shipping pretraining data + full training code + logs alongside weights — the closest thing to a fully reproducible open model.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. RESOURCES -->
+<section id="resources">
+  <h2>7. Resources</h2>
+  <ul>
+    <li><a href="https://github.com/meta-llama/llama-models" target="_blank">github.com/meta-llama/llama-models</a> — Llama 4</li>
+    <li><a href="https://github.com/QwenLM/Qwen3" target="_blank">github.com/QwenLM/Qwen3</a> — Qwen3</li>
+    <li><a href="https://github.com/deepseek-ai/DeepSeek-V3" target="_blank">github.com/deepseek-ai/DeepSeek-V3</a> — DeepSeek</li>
+    <li><a href="https://huggingface.co/google/gemma-3-27b-it" target="_blank">huggingface.co/google/gemma-3-27b-it</a> — Gemma 3</li>
+    <li><a href="https://huggingface.co/mistralai" target="_blank">huggingface.co/mistralai</a> — Mistral</li>
+    <li><a href="https://huggingface.co/zai-org/GLM-4.6" target="_blank">huggingface.co/zai-org/GLM-4.6</a> — GLM</li>
+    <li><a href="https://huggingface.co/xai-org/grok-1" target="_blank">huggingface.co/xai-org/grok-1</a> — Grok-1</li>
+    <li><a href="https://huggingface.co/microsoft/phi-4" target="_blank">huggingface.co/microsoft/phi-4</a> — Phi-4</li>
+    <li><a href="https://arxiv.org/html/2501.12948v1" target="_blank">arXiv:2501.12948</a> — DeepSeek-R1 paper (primary source for its benchmark claims)</li>
+    <li><a href="https://lmarena.ai" target="_blank">lmarena.ai</a>, <a href="https://artificialanalysis.ai" target="_blank">artificialanalysis.ai</a> — live cross-family leaderboards</li>
+  </ul>
+</section>
+
+<div id="bottom" style="scroll-margin-top:20px;"></div>
+</div>
+</body>
+</html>

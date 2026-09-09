@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAMMPS, GROMACS &amp; NAMD — Complete Reference</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#12151a; --panel2:#171b21; --border:#242a33;
+    --text:#e6e9ee; --muted:#9aa4b2; --accent:#76b900; --accent2:#9fe870;
+    --link:#7cc4ff; --warn:#f2b84b; --code:#1a1f26;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 90px; margin-left:280px;}
+  header.hero{
+    background:linear-gradient(135deg,#151a12,#0b0d10 70%);
+    border:1px solid var(--border); border-radius:16px;
+    padding:36px 32px; margin-bottom:28px; scroll-margin-top:20px;
+  }
+  header.hero h1{margin:0 0 8px; font-size:2.2rem; letter-spacing:-0.02em; color:var(--accent2);}
+  header.hero p.tag{color:var(--muted); margin:0; font-size:1.05rem}
+  .sidebar{
+    position:fixed; top:0; left:0; width:260px; height:100vh; overflow-y:auto;
+    background:var(--panel); border-right:1px solid var(--border);
+    padding:22px 14px 40px; box-sizing:border-box; z-index:40;
+  }
+  .sidebar-title{color:var(--accent2); font-weight:700; font-size:1.05rem; margin-bottom:2px; font-family:monospace;}
+  .sidebar-sub{color:var(--muted); font-size:.7rem; margin-bottom:18px; line-height:1.4;}
+  .sidebar a{
+    display:block; padding:7px 10px; margin-bottom:2px; border-radius:6px;
+    color:var(--text); text-decoration:none; font-size:.8rem; font-family:monospace;
+    border-left:2px solid transparent; white-space:normal;
+  }
+  .sidebar a:hover{background:var(--panel2); color:var(--accent2); border-left-color:var(--accent);}
+  .sidebar a.internal-link{color:var(--warn);}
+  .scroll-btns{position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:10px; z-index:50;}
+  .scroll-btns a{
+    background:var(--accent); color:#0d1117; font-weight:700; text-decoration:none;
+    width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.45); font-size:1.2rem; font-family:monospace;
+  }
+  .scroll-btns a:hover{background:var(--accent2);}
+  @media(max-width:900px){
+    .sidebar{position:static; width:auto; height:auto; border-right:none; border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; gap:6px;}
+    .sidebar-title,.sidebar-sub{width:100%;}
+    .wrap{margin-left:auto;}
+  }
+  section{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:26px 28px; margin-bottom:22px; scroll-margin-top:20px;
+  }
+  section h2{color:var(--accent2); font-size:1.35rem; margin-top:0; border-bottom:1px solid var(--border); padding-bottom:10px;}
+  section h3{color:var(--text); font-size:1.05rem; margin-bottom:6px}
+  p{color:var(--text)}
+  .muted{color:var(--muted)}
+  a{color:var(--link)}
+  code, .mono{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--code); padding:1px 6px; border-radius:4px; font-size:.88em; color:#d9e3ea;
+  }
+  pre{background:var(--code); border:1px solid var(--border); border-radius:10px; padding:16px; overflow-x:auto; font-size:.85rem;}
+  pre code{background:none; padding:0}
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.88rem}
+  th,td{border:1px solid var(--border); padding:7px 9px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2); font-weight:600}
+  tr:nth-child(even) td{background:#101318}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+  .card{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
+  .badge{
+    display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:10px;
+    background:#1d2a10; color:var(--accent2); border:1px solid #2e4118; margin-left:6px;
+  }
+  .badge.internal{background:#2a1a10; color:var(--warn); border-color:#4a3419}
+  ul{padding-left:20px}
+  li{margin-bottom:5px}
+  .callout{border-left:3px solid var(--accent); background:#0f150a; padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0; font-size:.92rem;}
+  .callout.warn{border-left-color:var(--warn); background:#191207}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <a href="../index.html" class="sidebar-title" style="text-decoration:none;display:block;">LAMMPS, GROMACS &amp; NAMD</a>
+  <div class="sidebar-sub">Updated 2026-09-09</div>
+  <a href="#top">↑ Top</a>
+  <a href="#what">1 · What &amp; Why</a>
+  <a href="#gpu-approach">2 · GPU Acceleration Approach</a>
+  <a href="#config">3 · Key Config Parameters</a>
+  <a href="#systems">4 · Standard Benchmark Systems</a>
+  <a href="#measured">5 · How it's Measured</a>
+  <a href="#charts">6 · Real Numbers</a>
+  <a href="#resources">7 · Resources</a>
+  <a href="#run-guide">8 · How to Run</a>
+  <a href="#bottom">↓ Bottom</a>
+</nav>
+
+<div class="scroll-btns">
+  <a href="#top" title="Back to top">↑</a>
+  <a href="#bottom" title="Jump to bottom">↓</a>
+</div>
+
+<div class="wrap">
+
+<header class="hero" id="top">
+  <h1>LAMMPS, GROMACS &amp; NAMD</h1>
+  <p class="tag">Real molecular-dynamics application benchmarks — the "does a real scientific app actually run fast" complement to HPL/HPCG — updated 2026-09-09.</p>
+</header>
+
+<!-- 1. WHAT / WHY -->
+<section id="what">
+  <h2>1. What are these, and why do they matter together?</h2>
+  <div class="grid3">
+    <div class="card"><strong>LAMMPS</strong><p class="muted">Sandia National Labs. General-purpose classical MD — materials science, granular flow, coarse-grained systems. Highly extensible.</p></div>
+    <div class="card"><strong>GROMACS</strong><p class="muted">University of Groningen. Biomolecular MD — proteins, membranes, nucleic acids. The dominant tool in pharma/structural biology.</p></div>
+    <div class="card"><strong>NAMD</strong><p class="muted">University of Illinois (Beckman Institute). Biomolecular MD built for massive parallel scalability — originally for supercomputers, virus-capsid-scale simulations.</p></div>
+  </div>
+  <p>They're grouped as the <strong>"real HPC application" category</strong> alongside HPL/HPCG (see the <a href="hpl.html">HPL page</a>) because they measure actual scientific-workload throughput — nanoseconds of simulated time per day — not synthetic FLOPS. Pharma companies, national labs, universities, and cloud HPC offerings (AWS/Azure/GCP HPC instance marketing) all use these results as real procurement evidence.</p>
+</section>
+
+<!-- 2. GPU APPROACH -->
+<section id="gpu-approach">
+  <h2>2. GPU acceleration approach</h2>
+  <div class="grid3">
+    <div class="card">
+      <h3>LAMMPS</h3>
+      <p class="muted">Two competing packages: <strong>GPU package</strong> (partial offload — pairwise force calc only) vs. <strong>KOKKOS package</strong> (whole simulation on GPU, minimizes host↔device transfer). Real finding: Kokkos "outscales the GPU package because it minimizes host-to-GPU data transfer" (ACES cluster study, H100 vs Intel Data Center GPU Max 1100). CPU-GPU ratio: <strong>16-32 CPU cores per GPU</strong>.</p>
+    </div>
+    <div class="card">
+      <h3>GROMACS</h3>
+      <p class="muted">Native CUDA/SYCL/OpenCL. Default hybrid scheme still runs PME and bonded forces on CPU — full offload requires explicit flags (<code>-nb gpu -pme gpu -bonded gpu -update gpu</code>), which "pins threads to host CPU."</p>
+    </div>
+    <div class="card">
+      <h3>NAMD</h3>
+      <p class="muted"><strong>GPU-resident mode</strong> (NAMD 3.0+) keeps simulation data on-device between timesteps, eliminating per-step host-device communication — claimed <strong>&gt;2× performance gain</strong> over the earlier GPU-offload mode, up to <strong>7×</strong> on supported hardware (DGX) vs. the old mode.</p>
+    </div>
+  </div>
+  <p class="muted">Universal bottleneck across all three: <strong>PME/electrostatics (particle-mesh Ewald)</strong> — usually the hardest part to offload efficiently and the first thing to check when GPU scaling disappoints.</p>
+</section>
+
+<!-- 3. CONFIG -->
+<section id="config">
+  <h2>3. Key config parameters</h2>
+  <table>
+    <tr><th>Tool</th><th>Flags</th><th>Notes</th></tr>
+    <tr><td>GROMACS</td><td><code>-nb gpu -pme gpu -bonded gpu -update gpu</code></td><td>Full offload. Also: <code>-ntmpi</code>/<code>-ntomp</code> (thread/rank split), <code>-pin on -pinstride 1</code> (CPU pinning — matters a lot for performance).</td></tr>
+    <tr><td>LAMMPS</td><td><code>-sf gpu</code> or <code>-sf kk -k on g &lt;N&gt;</code></td><td>GPU package vs. Kokkos (N = number of GPUs). Minimum optimal single-GPU load: 64×32,000 atoms (LJ), 128×32,000 (EAM), 16×32,000 (Rhodopsin).</td></tr>
+    <tr><td>NAMD</td><td><code>+devices &lt;list&gt;</code></td><td>GPU selection. GPU-resident mode is a build/runtime mode switch, not a per-flag toggle.</td></tr>
+  </table>
+</section>
+
+<!-- 4. SYSTEMS -->
+<section id="systems">
+  <h2>4. Standard benchmark systems</h2>
+  <div class="grid3">
+    <div class="card">
+      <h3>LAMMPS</h3>
+      <p class="muted">5 standard problems, each <strong>32,000 atoms, 100 timesteps</strong>: LJ (Lennard-Jones fluid), Chain (polymer melt), EAM (Cu metallic solid), Chute (granular flow), <strong>Rhodo</strong> (rhodopsin protein in lipid bilayer, CHARMM force field, PPPM electrostatics).</p>
+    </div>
+    <div class="card">
+      <h3>GROMACS</h3>
+      <p class="muted">No single "standard," but the NHR@FAU 2024.1 study used 6 real systems: 20,248 → 1,066,628 atoms (R-143a in hexane, RNA+water, membrane protein, protein in water, protein membrane channel, virus protein). AMD's own benchmarks use the <strong>ADH dodecahedron</strong> system.</p>
+    </div>
+    <div class="card">
+      <h3>NAMD</h3>
+      <p class="muted"><strong>DHFR</strong> (23,558 atoms), <strong>ApoA1</strong> (92,224 atoms), <strong>STMV</strong> (1,066,628 atoms — satellite tobacco mosaic virus, the large-scale flagship benchmark).</p>
+    </div>
+  </div>
+  <p class="muted">Source: <a href="https://docs.lammps.org/Speed_bench.html" target="_blank">docs.lammps.org/Speed_bench.html</a>, <a href="https://www.ks.uiuc.edu/Research/namd/benchmarks/" target="_blank">ks.uiuc.edu/Research/namd/benchmarks</a>.</p>
+</section>
+
+<!-- 5. MEASURED -->
+<section id="measured">
+  <h2>5. How results are measured</h2>
+  <p>Standard metric: <strong>ns/day</strong> (nanoseconds of simulated time per wall-clock day). Higher = faster. No universal "good" threshold — depends entirely on system size (smaller systems → much higher ns/day, since less work per timestep).</p>
+</section>
+
+<!-- 6. CHARTS -->
+<section id="charts">
+  <h2>6. Real numbers</h2>
+  <h3>GROMACS 2024.1 — ns/day across GPU generations (NHR@FAU study)</h3>
+  <p class="muted"><code>gmx mdrun -nb gpu -pme gpu -bonded gpu -update gpu -ntmpi 1 -ntomp 16 -pin on -pinstride 1 -nsteps 200000</code></p>
+  <table>
+    <tr><th>System (atoms)</th><th>H100</th><th>GH200</th><th>A100</th><th>A40</th><th>L40</th><th>L40S</th></tr>
+    <tr><td>20,248</td><td>354.4</td><td>411.5</td><td>267.5</td><td>277.0</td><td>416.1</td><td>405.3</td></tr>
+    <tr><td>31,889</td><td>1032.8</td><td>1123.5</td><td>691.7</td><td>731.8</td><td>1254.7</td><td>1219.7</td></tr>
+    <tr><td>80,289</td><td>400.4</td><td>470.6</td><td>265.8</td><td>268.1</td><td>463.3</td><td>472.4</td></tr>
+    <tr><td>170,320</td><td>205.0</td><td>232.6</td><td>129.1</td><td>122.3</td><td>212.1</td><td>229.2</td></tr>
+    <tr><td>615,924</td><td>63.5</td><td>75.0</td><td>38.8</td><td>34.9</td><td>57.8</td><td>68.3</td></tr>
+    <tr><td>1,066,628</td><td>37.5</td><td>44.4</td><td>23.2</td><td>19.0</td><td>31.7</td><td>37.9</td></tr>
+  </table>
+  <div class="callout">GH200 consistently beats H100 by <strong>~10-20%</strong> across every system size — same GPU silicon, but tighter CPU-GPU coupling via the Grace superchip. Source: <a href="https://hpc.fau.de/2024/08/13/gromacs-2024-1-on-brand-new-gpgpus/" target="_blank">hpc.fau.de GROMACS 2024.1 study</a>.</div>
+
+  <h3>NAMD, 456K-atom Her1-Her1 membrane (single-GPU)</h3>
+  <table>
+    <tr><th>GPU</th><th>ns/day</th></tr>
+    <tr><td>H100 PCIe</td><td>17.06</td></tr>
+    <tr><td>RTX 6000 Ada</td><td>21.21</td></tr>
+    <tr><td>RTX 4090</td><td>19.87</td></tr>
+  </table>
+  <p class="muted">Consumer cards beating H100 PCIe here is likely a memory-bandwidth-bound small-system artifact, not a general result — noted rather than smoothed over. Source: <a href="https://www.exxactcorp.com/blog/benchmarks/namd-gpu-benchmarks-and-hardware-recommendations" target="_blank">Exxact NAMD benchmarks</a>.</p>
+
+  <h3>AMD MI355X — GROMACS ADH dodecahedron (cross-vendor, different system)</h3>
+  <table>
+    <tr><th>Mode</th><th>1 GPU</th><th>8 GPU</th></tr>
+    <tr><td>SPX (non-partitioned)</td><td>888 ns/day</td><td>5,952 ns/day</td></tr>
+    <tr><td>CPX (partitioned)</td><td>2,065 ns/day</td><td>10,300 ns/day</td></tr>
+  </table>
+  <div class="callout warn">This uses a <strong>different benchmark system</strong> (ADH dodecahedron) than the NHR@FAU NVIDIA table above — <strong>not directly cross-comparable</strong> to the H100/GH200 numbers. Unlike the MLPerf/HPL pages where numbers really are same-round comparable, don't present these side-by-side as an apples-to-apples vendor comparison. Source: <a href="https://rocm.blogs.amd.com/artificial-intelligence/mi355-gromacs-benchmarks/README.html" target="_blank">AMD ROCm blog — MI355X GROMACS benchmarks</a>.</div>
+</section>
+
+<!-- 7. RESOURCES -->
+<section id="resources">
+  <h2>7. Resources</h2>
+  <ul>
+    <li><a href="https://www.lammps.org" target="_blank">lammps.org</a> / <a href="https://docs.lammps.org" target="_blank">docs.lammps.org</a> / <a href="https://github.com/lammps/lammps" target="_blank">github.com/lammps/lammps</a></li>
+    <li><a href="https://www.gromacs.org" target="_blank">gromacs.org</a> / <a href="https://manual.gromacs.org" target="_blank">manual.gromacs.org</a> — GROMACS is GitLab-hosted, not GitHub</li>
+    <li><a href="https://www.ks.uiuc.edu/Research/namd/" target="_blank">ks.uiuc.edu/Research/namd</a> — official NAMD site + benchmarks page</li>
+    <li>NVIDIA NGC containers: <code>nvcr.io/hpc/gromacs</code> (NAMD and LAMMPS containers also on NGC)</li>
+    <li><a href="https://developer.nvidia.com/hpc-application-performance" target="_blank">developer.nvidia.com/hpc-application-performance</a> — reference performance page</li>
+    <li><a href="https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/gromacs" target="_blank">nvidia.com/.../gpu-accelerated-applications/gromacs</a></li>
+  </ul>
+</section>
+
+<!-- 8. RUN GUIDE -->
+<section id="run-guide">
+  <h2>8. How to run</h2>
+  <h3>GROMACS (most complete example)</h3>
+  <pre><code>gmx mdrun -v -s benchmark.tpr -nb gpu -pme gpu -bonded gpu -update gpu \
+  -ntmpi 1 -ntomp 16 -pin on -pinstride 1 -nsteps 200000 -deffnm benchmark_name</code></pre>
+  <p class="muted">Output: <code>ns/day</code> printed directly in the mdrun log/performance summary — higher is better, compare against published reference numbers (§6) for the same system size.</p>
+
+  <h3>LAMMPS</h3>
+  <pre><code># Kokkos GPU mode (general pattern — see docs.lammps.org/Speed_kokkos.html for exact flags)
+lmp -sf kk -k on g &lt;N&gt; -pk kokkos -in in.rhodo</code></pre>
+
+  <h3>NAMD</h3>
+  <pre><code># GPU-resident mode requires a NAMD 3.0+ build; GPU selection via:
+namd3 +devices 0,1,2,3 +p32 apoa1.namd</code></pre>
+</section>
+
+
+<div id="bottom" style="scroll-margin-top:20px;"></div>
+</div>
+</body>
+</html>

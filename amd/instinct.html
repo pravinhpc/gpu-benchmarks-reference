@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMD Instinct &amp; ROCm — Complete Reference</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#12151a; --panel2:#171b21; --border:#242a33;
+    --text:#e6e9ee; --muted:#9aa4b2; --accent:#ff4f4f; --accent2:#ff8a8a;
+    --link:#7cc4ff; --warn:#f2b84b; --code:#1a1f26;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 90px; margin-left:280px;}
+  header.hero{
+    background:linear-gradient(135deg,#1a1112,#0b0d10 70%);
+    border:1px solid var(--border); border-radius:16px;
+    padding:36px 32px; margin-bottom:28px; scroll-margin-top:20px;
+  }
+  header.hero h1{margin:0 0 8px; font-size:2.2rem; letter-spacing:-0.02em; color:var(--accent2);}
+  header.hero p.tag{color:var(--muted); margin:0; font-size:1.05rem}
+  .sidebar{
+    position:fixed; top:0; left:0; width:260px; height:100vh; overflow-y:auto;
+    background:var(--panel); border-right:1px solid var(--border);
+    padding:22px 14px 40px; box-sizing:border-box; z-index:40;
+  }
+  .sidebar-title{color:var(--accent2); font-weight:700; font-size:1.05rem; margin-bottom:2px; font-family:monospace;}
+  .sidebar-sub{color:var(--muted); font-size:.7rem; margin-bottom:18px; line-height:1.4;}
+  .sidebar a{
+    display:block; padding:7px 10px; margin-bottom:2px; border-radius:6px;
+    color:var(--text); text-decoration:none; font-size:.8rem; font-family:monospace;
+    border-left:2px solid transparent; white-space:normal;
+  }
+  .sidebar a:hover{background:var(--panel2); color:var(--accent2); border-left-color:var(--accent);}
+  .scroll-btns{position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:10px; z-index:50;}
+  .scroll-btns a{
+    background:var(--accent); color:#0d1117; font-weight:700; text-decoration:none;
+    width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.45); font-size:1.2rem; font-family:monospace;
+  }
+  .scroll-btns a:hover{background:var(--accent2);}
+  @media(max-width:900px){
+    .sidebar{position:static; width:auto; height:auto; border-right:none; border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; gap:6px;}
+    .sidebar-title,.sidebar-sub{width:100%;}
+    .wrap{margin-left:auto;}
+  }
+  section{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:26px 28px; margin-bottom:22px; scroll-margin-top:20px;
+  }
+  section h2{color:var(--accent2); font-size:1.35rem; margin-top:0; border-bottom:1px solid var(--border); padding-bottom:10px;}
+  section h3{color:var(--text); font-size:1.05rem; margin-bottom:6px}
+  p{color:var(--text)}
+  .muted{color:var(--muted)}
+  a{color:var(--link)}
+  code, .mono{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--code); padding:1px 6px; border-radius:4px; font-size:.88em; color:#d9e3ea;
+  }
+  pre{background:var(--code); border:1px solid var(--border); border-radius:10px; padding:16px; overflow-x:auto; font-size:.85rem;}
+  pre code{background:none; padding:0}
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.9rem}
+  th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2); font-weight:600}
+  tr:nth-child(even) td{background:#101318}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+  .card{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
+  .badge{
+    display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:10px;
+    background:#2a1010; color:var(--accent2); border:1px solid #4a1a1a; margin-left:6px;
+  }
+  ul{padding-left:20px}
+  li{margin-bottom:5px}
+  .callout{border-left:3px solid var(--accent); background:#150a0a; padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0; font-size:.92rem;}
+  .callout.warn{border-left-color:var(--warn); background:#191207}
+  svg{display:block; margin:16px auto; max-width:100%;}
+  .svgwrap{background:#0a0d10; border:1px solid var(--border); border-radius:10px; padding:16px;}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <a href="../index.html" class="sidebar-title" style="text-decoration:none;display:block;">AMD Instinct &amp; ROCm</a>
+  <div class="sidebar-sub">Updated 2026-09-09</div>
+  <a href="#top">↑ Top</a>
+  <a href="#what">1 · What &amp; Why</a>
+  <a href="#hardware">2 · Hardware Generations</a>
+  <a href="#software">3 · Software Stack (ROCm)</a>
+  <a href="#training">4 · Training Framework</a>
+  <a href="#models">5 · Instella Open Models</a>
+  <a href="#crossvendor">6 · vs NVIDIA — Real Numbers</a>
+  <a href="#acceptance">7 · Cluster Acceptance Testing</a>
+  <a href="#resources">8 · Resources</a>
+  <a href="#run-guide">9 · How to Run</a>
+  <a href="#bottom">↓ Bottom</a>
+</nav>
+
+<div class="scroll-btns">
+  <a href="#top" title="Back to top">↑</a>
+  <a href="#bottom" title="Jump to bottom">↓</a>
+</div>
+
+<div class="wrap">
+
+<header class="hero" id="top">
+  <h1>AMD Instinct &amp; ROCm</h1>
+  <p class="tag">The other side of the GPU cluster market — MI300X to MI400, ROCm/RCCL/AMD-SMI/RVS tooling, AMD's Megatron fork, and the Instella open-model family — updated 2026-09-09.</p>
+</header>
+
+<!-- 1. WHAT / WHY -->
+<section id="what">
+  <h2>1. What is AMD Instinct, and why does it matter?</h2>
+  <p><strong>AMD Instinct</strong> is AMD's datacenter GPU line — the primary alternative to NVIDIA's H100/H200/B200/GB200 for large-scale AI training and inference. This is the first non-NVIDIA vendor page on this site, added because a genuinely distinct, well-documented parallel stack exists: real hardware specs, a real software stack (ROCm), a real diagnostic/burn-in tool family, an official large-scale training framework fork, and a real from-scratch open-model family — not just "runs the same models as NVIDIA."</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Why it matters</h3>
+      <ul>
+        <li><strong>Real hyperscaler adoption</strong> — MI300X/MI325X deployed at scale by major clouds; the credible #2 in the AI accelerator market.</li>
+        <li><strong>Genuinely competitive, not just cheaper</strong> — MI300X lands within 2-3% of H100 on real MLPerf Inference numbers (see §6); MI355X reaches near-parity with B200.</li>
+        <li><strong>A real parallel ecosystem</strong> — ROCm mirrors CUDA's role, RCCL mirrors NCCL, AMD-SMI/RVS mirror nvidia-smi/DCGM — worth understanding even if you primarily work with NVIDIA hardware.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What's genuinely different (not a reskin)</h3>
+      <ul>
+        <li><strong>Node interconnect topology</strong> — a true point-to-point mesh (Infinity Fabric), not a switched fabric like NVSwitch (§2).</li>
+        <li><strong>RCCL is an honest, lagging fork of NCCL</strong> — AMD's own community describes it as such; new NCCL features take months to land in RCCL.</li>
+        <li><strong>Instella</strong> — a real from-scratch open-model family trained entirely on MI300X, not just "we support Llama."</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 2. HARDWARE -->
+<section id="hardware">
+  <h2>2. Hardware generations</h2>
+  <table>
+    <tr><th>Chip</th><th>Memory</th><th>Peak compute</th><th>TDP</th><th>Architecture</th></tr>
+    <tr><td>MI300X</td><td>192GB HBM3, 5.3TB/s</td><td>—</td><td>750W</td><td>CDNA3, 304 CUs, 1,216 Matrix Cores</td></tr>
+    <tr><td>MI350X</td><td>288GB HBM3E, 8TB/s</td><td>9.2 PFLOPs MXFP4, 4.6 PFLOPs FP8, 2.3 PFLOPs FP16</td><td>1,000W (TBP)</td><td>CDNA4</td></tr>
+    <tr><td>MI400 (2026-2027 roadmap)</td><td>432GB HBM4, 19.6TB/s</td><td>40 PFLOPs FP4, 20 PFLOPs FP8</td><td>—</td><td>—</td></tr>
+  </table>
+  <p class="muted">MI350X beats B200's 192GB memory and matches B200's FP8 TFLOPS. PCIe Gen5 x16 across the current lineup. Sources: <a href="https://www.amd.com/en/products/accelerators/instinct/mi300/mi300x.html" target="_blank">AMD MI300X datasheet</a>, <a href="https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/amd-instinct-mi350x-platform-brochure.pdf" target="_blank">MI350X platform brochure</a>.</p>
+
+  <h3>Node topology — a genuinely different architecture from NVSwitch</h3>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+    <text x="450" y="24" text-anchor="middle" fill="#ff8a8a" font-family="monospace" font-size="14">Infinity Fabric full mesh — 8 GPUs, 7 direct links each (no switch chip)</text>
+    <g font-family="monospace" font-size="11" text-anchor="middle">
+    <circle cx="450" cy="60" r="34" fill="#171b21" stroke="#ff4f4f" stroke-width="2"/><text x="450" y="65" fill="#e6e9ee">GPU0</text>
+    <circle cx="650" cy="110" r="34" fill="#171b21" stroke="#ff4f4f" stroke-width="2"/><text x="650" y="115" fill="#e6e9ee">GPU1</text>
+    <circle cx="720" cy="220" r="34" fill="#171b21" stroke="#ff4f4f" stroke-width="2"/><text x="720" y="225" fill="#e6e9ee">GPU2</text>
+    <circle cx="600" cy="290" r="34" fill="#171b21" stroke="#ff4f4f" stroke-width="2"/><text x="600" y="295" fill="#e6e9ee">GPU3</text>
+    <circle cx="300" cy="290" r="34" fill="#171b21" stroke="#ff4f4f" stroke-width="2"/><text x="300" y="295" fill="#e6e9ee">GPU4</text>
+    <circle cx="180" cy="220" r="34" fill="#171b21" stroke="#ff4f4f" stroke-width="2"/><text x="180" y="225" fill="#e6e9ee">GPU5</text>
+    <circle cx="250" cy="110" r="34" fill="#171b21" stroke="#ff4f4f" stroke-width="2"/><text x="250" y="115" fill="#e6e9ee">GPU6</text>
+    <circle cx="450" cy="180" r="34" fill="#171b21" stroke="#f2b84b" stroke-width="2"/><text x="450" y="185" fill="#e6e9ee">GPU7</text>
+    </g>
+    <g stroke="#7a2a2a" stroke-width="1" opacity="0.7">
+      <line x1="450" y1="60" x2="650" y2="110"/><line x1="450" y1="60" x2="720" y2="220"/><line x1="450" y1="60" x2="600" y2="290"/><line x1="450" y1="60" x2="300" y2="290"/><line x1="450" y1="60" x2="180" y2="220"/><line x1="450" y1="60" x2="250" y2="110"/><line x1="450" y1="60" x2="450" y2="180"/>
+      <line x1="650" y1="110" x2="720" y2="220"/><line x1="650" y1="110" x2="600" y2="290"/><line x1="650" y1="110" x2="300" y2="290"/><line x1="650" y1="110" x2="180" y2="220"/><line x1="650" y1="110" x2="250" y2="110"/><line x1="650" y1="110" x2="450" y2="180"/>
+      <line x1="720" y1="220" x2="600" y2="290"/><line x1="720" y1="220" x2="300" y2="290"/><line x1="720" y1="220" x2="180" y2="220"/><line x1="720" y1="220" x2="250" y2="110"/><line x1="720" y1="220" x2="450" y2="180"/>
+      <line x1="600" y1="290" x2="300" y2="290"/><line x1="600" y1="290" x2="180" y2="220"/><line x1="600" y1="290" x2="250" y2="110"/><line x1="600" y1="290" x2="450" y2="180"/>
+      <line x1="300" y1="290" x2="180" y2="220"/><line x1="300" y1="290" x2="250" y2="110"/><line x1="300" y1="290" x2="450" y2="180"/>
+      <line x1="180" y1="220" x2="250" y2="110"/><line x1="180" y1="220" x2="450" y2="180"/>
+      <line x1="250" y1="110" x2="450" y2="180"/>
+    </g>
+    <text x="450" y="350" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">7 links × 128GB/s = 896GB/s aggregate per GPU. No switch ASIC needed at exactly 8 GPUs —</text>
+    <text x="450" y="365" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">but doesn't scale past 8 without one, unlike NVSwitch.</text>
+  </svg>
+  </div>
+  <p class="muted">This is architecturally distinct from NVIDIA's approach: NVSwitch is a separate switch chip that all GPUs connect to (a star/switched topology); AMD's 8-GPU mesh is true point-to-point (7 peers = 7 direct links, no switch). Source: <a href="https://hc2024.hotchips.org/assets/program/conference/day1/23_HC2024.AMD.MI300X.ASmith(MI300X).v1.Final.20240817.pdf" target="_blank">Hot Chips 2024 MI300X architecture deck</a>.</p>
+</section>
+
+<!-- 3. SOFTWARE -->
+<section id="software">
+  <h2>3. Software stack</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>ROCm</h3>
+      <p class="muted">AMD's CUDA-equivalent — the full compute stack (compiler, runtime, libraries: rocBLAS, hipBLAS, etc.). Mature, actively developed.</p>
+    </div>
+    <div class="card">
+      <h3>RCCL</h3>
+      <p class="muted">The NCCL-equivalent collective comms library. By AMD's own community's characterization: <strong>"a fork of NCCL, basically a copy+paste carbon copy except it takes months for new NCCL features to reach RCCL."</strong> Real distinct bits: XCD/tile-aware channel placement, ring/tree construction reflecting the multi-hop Infinity Fabric topology (§2). Now hosted in the consolidated <a href="https://github.com/ROCm/rocm-systems" target="_blank">ROCm/rocm-systems</a> monorepo (the standalone <code>ROCm/rccl</code> repo is retired/archived).</p>
+    </div>
+  </div>
+  <h3>Diagnostic &amp; monitoring tools — a real tiered system, parallel to DCGM</h3>
+  <table>
+    <tr><th>Tool</th><th>Role</th></tr>
+    <tr><td><code>amd-smi</code></td><td>The <code>nvidia-smi</code> equivalent — <code>amd-smi monitor</code>, <code>--power-usage --temperature</code>, <code>--gfx --mem</code>, <code>--vram-usage --ecc</code>, <code>--pcie</code>. Unified CLI, replacing the older <code>rocm-smi</code>.</td></tr>
+    <tr><td><strong>RVS (ROCm Validation Suite)</strong></td><td>The DCGM-diag equivalent — <strong>levels 1-5 via <code>-r</code></strong>, directly analogous to DCGM's <code>-r1</code>...<code>-r4</code> (see <a href="../benchmarks/gpu-burn.html">gpu-burn &amp; DCGM page</a>). Commands: <code>./rvs -g</code> (list GPUs), <code>./rvs -d 3</code> (verbose sanity run), <code>./rvs -c conf/gst_single.conf</code> (specific module).</td></tr>
+    <tr><td><strong>RDC</strong> (ROCm Data Center tool)</td><td>Combines rocm-smi + RAS + rocprofiler — closer to DCGM's monitoring role than its diagnostic role.</td></tr>
+    <tr><td>TransferBench</td><td>PCIe/P2P bandwidth tool (ROCm Bandwidth Test is deprecated/EOL as of ROCm 7.14.0).</td></tr>
+  </table>
+  <h3>RVS modules</h3>
+  <div class="grid3">
+    <div class="card"><strong>GST</strong><p class="muted">GPU Stress Test — BF16/FP8 GEMM</p></div>
+    <div class="card"><strong>IET</strong><p class="muted">Power/TGP stress via GEMM</p></div>
+    <div class="card"><strong>BABEL</strong><p class="muted">BabelStream memory bandwidth</p></div>
+    <div class="card"><strong>PEBB/PBQT</strong><p class="muted">TransferBench-based PCIe/P2P bandwidth</p></div>
+    <div class="card"><strong>MEM</strong><p class="muted">Walking-1-bit / moving-inversions HBM tests</p></div>
+    <div class="card"><strong>PQT</strong><p class="muted">PCIe qualification</p></div>
+  </div>
+</section>
+
+<!-- 4. TRAINING -->
+<section id="training">
+  <h2>4. AMD's Megatron-equivalent training framework</h2>
+  <p>AMD maintains an official <strong>ROCm fork of Megatron-LM</strong>, plus a newer <strong>Primus-Megatron</strong> integration. Supports Llama 3.3-70B, 3.1-8B/70B, DeepSeek, Mixtral. Ships ready-to-use Docker images (ROCm 6.4.1 + PyTorch 2.8.0a0).</p>
+  <div class="callout warn">Honest gap: no MFU/throughput benchmark numbers comparable to the 35-55% MFU range documented on the <a href="../nvidia/megatron.html">Megatron-LM page</a> were found for AMD's training stack in this research pass. AMD's docs describe setup, not published efficiency numbers. Real MLPerf Training round-over-round gains are documented in §6 instead — those are sourced and real, just measuring something slightly different (submission-round speedup, not steady-state MFU).</div>
+</section>
+
+<!-- 5. MODELS -->
+<section id="models">
+  <h2>5. Instella — AMD's from-scratch open model family</h2>
+  <p><strong>Instella-3B</strong> is trained entirely from scratch on MI300X — fully open (weights + data + training config + code), not just a fine-tune. AMD claims it outperforms other fully-open ~3B models and is competitive with Llama-3.2-3B, Gemma-2-2B, Qwen-2.5-3B (open-weight, not fully-open, comparison).</p>
+  <table>
+    <tr><th>Model</th><th>Notes</th></tr>
+    <tr><td>Instella-3B</td><td>Base model, trained from scratch on MI300X</td></tr>
+    <tr><td>Instella-3B-SFT / -3B-Instruct</td><td>Post-trained variants</td></tr>
+    <tr><td>Instella-3B-Long-Instruct</td><td>128K context</td></tr>
+    <tr><td>Instella-MoE-16B-A3B-SFT</td><td>Mixture-of-Experts variant</td></tr>
+  </table>
+  <p class="muted">All published on HuggingFace under the <a href="https://huggingface.co/collections/amd/instella" target="_blank">amd/</a> org. Honest gap: specific MMLU/benchmark score numbers weren't extracted in this research pass — the HF collection page itself has the exact tables.</p>
+</section>
+
+<!-- 6. CROSS VENDOR -->
+<section id="crossvendor">
+  <h2>6. vs NVIDIA — real numbers</h2>
+  <p class="muted">Same sourced numbers as the <a href="../benchmarks/mlperf.html">MLPerf page</a>'s cross-vendor section — repeated here for a vendor-centric view.</p>
+  <table>
+    <tr><th>Comparison</th><th>Result</th></tr>
+    <tr><td>MI300X vs H100 — Llama 2 70B inference</td><td>MI300X within <strong>2-3% of H100</strong></td></tr>
+    <tr><td>MI300X vs H100 — BERT training</td><td>MI300X at <strong>95% of H100</strong> (single-accelerator)</td></tr>
+    <tr><td>MI325X vs H200 — Llama 2 70B LoRA fine-tune (8 GPUs)</td><td>21.75 min — <strong>8% faster than H200</strong></td></tr>
+    <tr><td>MI355X vs B200 — Llama 2 70B LoRA fine-tune</td><td>Near-parity: 10.18 min vs B200's 9.85 min; &gt;1M tok/s at cluster scale</td></tr>
+    <tr><td>MI355X vs MI300X (1 year prior)</td><td><strong>3.5× faster</strong> (MLPerf Training v6.0)</td></tr>
+    <tr><td>MLPerf Training v6.0 vs v5.1 (round-over-round)</td><td>+19% (MI355X) / +16% (MI350X) on Llama2-70B-LoRA; +13%/+11% on Llama3.1-8B pretraining</td></tr>
+  </table>
+  <p class="muted">AMD's first multi-node MLPerf submission: FLUX.1-Schnell on 64×MI325X and 512×MI300X (v6.0). Source: <a href="https://www.amd.com/en/blogs/2026/amd-delivers-breakthrough-mlperf-training-6-0-results.html" target="_blank">AMD MLPerf Training 6.0 blog</a>, <a href="https://rocm.blogs.amd.com/artificial-intelligence/mlperf-training-v6.0/README.html" target="_blank">ROCm blog technical dive</a>.</p>
+</section>
+
+<!-- 7. ACCEPTANCE -->
+<section id="acceptance">
+  <h2>7. Cluster acceptance testing — AMD's own equivalent to Armada/NodeQA</h2>
+  <p>AMD publishes a real, sourced <strong>Instinct Customer Acceptance Guide</strong> — genuinely parallel to what NVIDIA teams run for new-cluster acceptance validation before a cluster enters production.</p>
+  <table>
+    <tr><th>Test</th><th>Threshold</th></tr>
+    <tr><td>TransferBench a2a</td><td>≥ 32.9 GB/s</td></tr>
+    <tr><td>rocBLAS FP32 GEMM</td><td>≥ 94,100 GFLOPS</td></tr>
+    <tr><td>BabelStream Triad</td><td>≥ 3,885,301 MB/s</td></tr>
+    <tr><td>RCCL all-reduce (8 GPU)</td><td>≥ 304 GB/s</td></tr>
+    <tr><td>MEM bandwidth</td><td>~2 TB/s</td></tr>
+  </table>
+  <h3>AGFHC — AMD GPU Field Health Check (Phase 3)</h3>
+  <p>Minimum required suite = <strong>14.67 hours</strong>:</p>
+  <ul>
+    <li><code>all_lvl5</code> — 2hr sweep</li>
+    <li><code>hbm_lvl5</code> — 4×2hr with 5min thermal recovery between runs</li>
+    <li><code>gfx_lvl4</code> — 1hr</li>
+    <li><code>minihpl</code> — 3hr compute-fabric integration test (<strong>AMD runs an HPL-equivalent as part of acceptance</strong>, same principle as NVIDIA — see the <a href="../benchmarks/hpl.html">HPL page</a>)</li>
+    <li><code>pcie_lvl2</code> — 10min</li>
+  </ul>
+  <div class="callout warn">Pass = exit code 0 on every recipe. Failure message, quoted directly: <em>"Do not proceed further. Report this issue to your system manufacturer immediately."</em></div>
+  <p class="muted">Source: <a href="https://instinct.docs.amd.com/projects/system-acceptance/en/latest/common/system-validation.html" target="_blank">instinct.docs.amd.com — system-validation</a>.</p>
+</section>
+
+<!-- 8. RESOURCES -->
+<section id="resources">
+  <h2>8. Resources</h2>
+  <ul>
+    <li><a href="https://rocm.docs.amd.com" target="_blank">rocm.docs.amd.com</a> — official ROCm documentation</li>
+    <li><a href="https://github.com/ROCm/rocm-systems" target="_blank">github.com/ROCm/rocm-systems</a> — consolidated ROCm monorepo (includes RCCL)</li>
+    <li><a href="https://instinct.docs.amd.com/projects/system-acceptance" target="_blank">instinct.docs.amd.com/projects/system-acceptance</a> — Customer Acceptance Guide (§7)</li>
+    <li><a href="https://huggingface.co/collections/amd/instella" target="_blank">huggingface.co/collections/amd/instella</a> — Instella model family</li>
+    <li><a href="https://rocm.blogs.amd.com" target="_blank">rocm.blogs.amd.com</a> — AMD's ROCm technical blog</li>
+    <li><a href="https://www.amd.com/en/products/accelerators/instinct.html" target="_blank">amd.com/.../accelerators/instinct</a> — official product pages</li>
+  </ul>
+</section>
+
+<!-- 9. RUN GUIDE -->
+<section id="run-guide">
+  <h2>9. How to run it</h2>
+  <h3>Pull a ROCm container</h3>
+  <pre><code>docker pull rocm/pytorch:latest
+docker run -it --network=host --device=/dev/kfd --device=/dev/dri \
+  --group-add video --ipc=host --shm-size 16G rocm/pytorch:latest</code></pre>
+
+  <h3>Quick health check with RVS</h3>
+  <pre><code>./rvs -g              # list detected GPUs
+./rvs -d 3             # verbose sanity run
+./rvs -c conf/gst_single.conf   # GPU Stress Test module</code></pre>
+
+  <h3>Check GPU status</h3>
+  <pre><code>amd-smi monitor --power-usage --temperature --gfx --mem</code></pre>
+</section>
+
+<div id="bottom" style="scroll-margin-top:20px;"></div>
+</div>
+</body>
+</html>

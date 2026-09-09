@@ -96,16 +96,17 @@
   <a href="#how-runs">2 · How it Runs</a>
   <a href="#attributes">3 · Env Vars / Attributes</a>
   <a href="#tests">4 · Test Types</a>
-  <a href="#measured">5 · How it's Measured</a>
-  <a href="#csp">6 · Cross-CSP Notes</a>
-  <a href="#hw-gen">7 · Hardware Generations</a>
-  <a href="#explorer">8 · Interactive Explorer</a>
-  <a href="#versions">9 · Version Timeline</a>
-  <a href="#troubleshooting">10 · Troubleshooting &amp; Reliability</a>
-  <a href="#integration">11 · Framework, API &amp; Profiling</a>
-  <a href="#other-libs">12 · Other Collective Libs</a>
-  <a href="#resources">13 · Resources</a>
-  <a href="#run-guide">14 · How to Run</a>
+  <a href="#nvbandwidth">5 · nvbandwidth</a>
+  <a href="#measured">6 · How it's Measured</a>
+  <a href="#csp">7 · Cross-CSP Notes</a>
+  <a href="#hw-gen">8 · Hardware Generations</a>
+  <a href="#explorer">9 · Interactive Explorer</a>
+  <a href="#versions">10 · Version Timeline</a>
+  <a href="#troubleshooting">11 · Troubleshooting &amp; Reliability</a>
+  <a href="#integration">12 · Framework, API &amp; Profiling</a>
+  <a href="#other-libs">13 · Other Collective Libs</a>
+  <a href="#resources">14 · Resources</a>
+  <a href="#run-guide">15 · How to Run</a>
   <a href="#bottom">↓ Bottom</a>
 </nav>
 
@@ -393,9 +394,55 @@
   </table>
 </section>
 
-<!-- 5. MEASURED -->
+<!-- 5. NVBANDWIDTH -->
+<section id="nvbandwidth">
+  <h2>5. nvbandwidth — raw link bandwidth, not collective bandwidth</h2>
+  <p><a href="https://github.com/NVIDIA/nvbandwidth" target="_blank">nvbandwidth</a> is NVIDIA's open-source tool for measuring raw point-to-point memcpy bandwidth across individual links (PCIe, NVLink) — via either the Copy Engine (CE) or an SM/kernel-based copy. It sits one layer below nccl-tests: nvbandwidth has <strong>no collective-algorithm overhead</strong> (no ring/tree construction, no protocol selection) — it's the closest thing to a hardware bandwidth ceiling test.</p>
+
+  <div class="callout">
+    <strong>nvbandwidth vs nccl-tests — the standard diagnostic split:</strong>
+    <ul>
+      <li><strong>nvbandwidth</strong> = what the raw link can physically deliver (PCIe/NVLink ceiling)</li>
+      <li><strong>nccl-tests</strong> = what the collective operation actually achieves against that ceiling</li>
+    </ul>
+    If nccl-tests shows poor AllReduce bus-bandwidth but nvbandwidth shows expected NVLink/PCIe numbers on the same links, the problem is algorithmic/software (tuning, topology detection, protocol selection). If nvbandwidth itself shows degraded raw numbers, it's a hardware/topology/link problem (bad NVLink, PCIe misconfiguration, wrong GPU affinity) — check this <em>before</em> chasing NCCL tuning flags.
+  </div>
+
+  <h3>What it tests</h3>
+  <ul>
+    <li>Host-to-Device / Device-to-Host transfers (PCIe)</li>
+    <li>Device-to-Device transfers over NVLink or PCIe (CE or SM copy method)</li>
+    <li>Bidirectional simultaneous transfers</li>
+    <li>All-to-all / multi-pair topology sweeps</li>
+    <li>Multi-node tests (build with <code>-DMULTINODE=1</code>, MPI-based — one rank per GPU)</li>
+  </ul>
+
+  <h3>CLI usage</h3>
+  <pre><code>./nvbandwidth                                    # run all testcases
+./nvbandwidth -l                                 # list available testcases
+./nvbandwidth -t device_to_device_memcpy_write_ce # run by name or index
+./nvbandwidth -p device_to_device                # run by prefix match
+./nvbandwidth -b 512                             # buffer size in MiB (default 512)
+./nvbandwidth -i 3                               # test iterations/samples
+./nvbandwidth -s                                 # skip data verification
+./nvbandwidth -j                                 # JSON output
+./nvbandwidth -v                                 # verbose</code></pre>
+  <p class="muted">Other flags: <code>-d</code> disable CPU affinity, <code>-m</code> use mean instead of median. Verify exact flag spelling against the current README before scripting — flags have shifted slightly across releases.</p>
+
+  <h3>Example output</h3>
+  <pre><code>memcpy CE GPU(row) &lt;- GPU(column) bandwidth (GB/s)
+          0         1         2         3
+0      0.00    276.07    276.36    276.14
+1    276.19      0.00    276.29    276.29</code></pre>
+
+  <div class="callout warn">Real diagnostic example (community-documented, <a href="https://github.com/NVIDIA/nccl-tests/issues/268" target="_blank">nccl-tests issue #268</a>): nvbandwidth showed ~260 GB/s NVLink between two H100s while <code>sendrecv_perf</code> showed only ~80 GB/s at default message size, converging toward ~180 GB/s only at larger message sizes. This is expected, not a bug — nccl-tests numbers are heavily message-size-dependent (protocol/algorithm overhead dominates at small sizes), while nvbandwidth reflects the copy-engine ceiling largely independent of message size. Don't conclude "NVLink is broken" from a low nccl-tests number alone — check nvbandwidth first.</div>
+
+  <p class="muted">Sources: <a href="https://github.com/NVIDIA/nvbandwidth" target="_blank">github.com/NVIDIA/nvbandwidth</a>, <a href="https://developer.nvidia.com/blog/nvidia-nvbandwidth-your-essential-tool-for-measuring-gpu-interconnect-and-memory-performance/" target="_blank">NVIDIA dev blog — nvbandwidth</a>.</p>
+</section>
+
+<!-- 6. MEASURED -->
 <section id="measured">
-  <h2>5. How results are measured / interpreted</h2>
+  <h2>6. How results are measured / interpreted</h2>
   <p>Every test reports two bandwidth numbers per message size:</p>
   <div class="grid2">
     <div class="card">
@@ -462,9 +509,9 @@
   </div>
 </section>
 
-<!-- 6. CSP -->
+<!-- 7. CSP -->
 <section id="csp">
-  <h2>6. Cross-CSP / bare-metal notes</h2>
+  <h2>7. Cross-CSP / bare-metal notes</h2>
   <table>
     <tr><th>Environment</th><th>Fabric</th><th>NCCL specifics</th></tr>
     <tr><td><strong>AWS</strong></td><td>EFA (Elastic Fabric Adapter)</td><td>Requires the <a href="https://github.com/aws/aws-ofi-nccl" target="_blank">aws-ofi-nccl</a> plugin — maps NCCL's connection-oriented API onto libfabric's connectionless reliable-datagram interface. AWS recommends building from tagged releases, not HEAD.</td></tr>
@@ -522,9 +569,9 @@
   <div class="callout">Why this matters operationally: it lets same-rank collectives (e.g. all the "GPU 0" ranks across a job) communicate through a single switch hop instead of crossing the spine — lower latency, more predictable bandwidth. It's also why <code>NCCL_CROSS_NIC</code> exists: letting a ring/tree freely hop between rails defeats the locality this design buys you, so NCCL defaults to keeping each channel on one rail where possible. And it's why <code>NCCL_IB_HCA</code>'s rail/plane addressing exists — to let you pin traffic to the correct rail when auto-detection picks wrong (e.g. a management NIC instead of a compute-fabric rail).</div>
 </section>
 
-<!-- 7. HARDWARE GENERATIONS -->
+<!-- 8. HARDWARE GENERATIONS -->
 <section id="hw-gen">
-  <h2>7. Hardware Generation Reference</h2>
+  <h2>8. Hardware Generation Reference</h2>
   <p class="muted">Context for every busbw number on this page: what's the theoretical ceiling for the hardware generation actually being tested? Verified against NVIDIA datasheets and vendor technical docs, with gaps flagged rather than guessed.</p>
 
   <h3>NVLink generations</h3>
@@ -571,9 +618,9 @@
   <p class="muted">Sources: NVIDIA A100/H100 datasheets, NVIDIA ConnectX-8 spec sheet, Nebius GB200 NVL72 architecture blog, NADDOD GB200/NDR technical analyses, FS.com and AICPLight IB-vs-RoCE comparisons.</p>
 </section>
 
-<!-- 8. INTERACTIVE EXPLORER -->
+<!-- 9. INTERACTIVE EXPLORER -->
 <section id="explorer">
-  <h2>8. Interactive NCCL Benchmark Explorer</h2>
+  <h2>9. Interactive NCCL Benchmark Explorer</h2>
   <p class="muted">Pick a platform and a message size — this looks up the nearest real published data point(s) from the tables in §5/§6 and, where more than one anchor point exists for that platform, linearly interpolates between them. It also prints the matching <code>nccl-tests</code> command. <strong>This is not a simulator</strong> — it can't predict numbers for configs nobody has published. Where a platform has only one anchor point, the estimate is flat across the size range and clearly labeled as such.</p>
 
   <div class="card" style="margin-bottom:16px;">
@@ -607,9 +654,9 @@
   <p class="muted" style="margin-top:14px;">Dataset (all anchor points sourced from §5/§6 above — same numbers, same sources, nothing new introduced here): OCI BM.GPU.H100.8 (2 real points: 1GB→446.28 GB/s, 16GB→464.57 GB/s), DGX H100 single-node (3 points: 1MB→280, 64MB→430, 1GB→450 GB/s), GB200 NVL72 NVL8/NVL4 partitions ×Ring/Tree (1 point each, 17.18GB), Azure ND H100 v5 intra-node (1 point), GCP A3 Mega (1 point, ~4GB representative), AWS p4d.24xlarge EFA (1 point), H200 NVL RoCE (1 point, 8.5GB).</p>
 </section>
 
-<!-- 9. VERSION TIMELINE -->
+<!-- 10. VERSION TIMELINE -->
 <section id="versions">
-  <h2>9. NCCL Version &amp; Feature Timeline</h2>
+  <h2>10. NCCL Version &amp; Feature Timeline</h2>
   <p class="muted">The page references NVLS, PAT, CollNet, and other features elsewhere without saying when they became available — here's when. Verified against NVIDIA's own release notes/dev blog, not guessed.</p>
   <table>
     <tr><th>Feature</th><th>NCCL version</th><th>What it does</th></tr>
@@ -622,9 +669,9 @@
   <p class="muted">Source: <a href="https://docs.nvidia.com/deeplearning/nccl/pdf/NCCL-Release-Notes.pdf" target="_blank">NCCL Release Notes</a>, <a href="https://developer.nvidia.com/blog/new-scaling-algorithm-and-initialization-with-nvidia-collective-communications-library-2-23/" target="_blank">NCCL 2.23 blog</a>, <a href="https://developer.nvidia.com/blog/enabling-fast-inference-and-resilient-training-with-nccl-2-27/" target="_blank">NCCL 2.27 blog</a>, <a href="https://docs.nvidia.com/deeplearning/nccl/archives/nccl_2283/user-guide/docs/usage/deviceapi.html" target="_blank">NCCL 2.28 device API docs</a>.</p>
 </section>
 
-<!-- 10. TROUBLESHOOTING -->
+<!-- 11. TROUBLESHOOTING -->
 <section id="troubleshooting">
-  <h2>10. Troubleshooting &amp; Reliability</h2>
+  <h2>11. Troubleshooting &amp; Reliability</h2>
 
   <h3>Common error messages and what they mean</h3>
   <table>
@@ -648,9 +695,9 @@
   <div class="callout">Real-world cost of this at scale — Meta's Llama&nbsp;3 herd paper (arXiv:2407.21783) reports <strong>466 job interruptions</strong> over a 54-day, 16,384-H100 pretraining run (47 planned, 419 unexpected — roughly <strong>one unexpected failure every ~3 hours</strong>). 78% of unexpected interruptions were confirmed/suspected hardware issues (GPU failures including NVLink, plus HBM3 memory failures, made up the largest share). Despite that failure rate, they held <strong>&gt;90% effective training time</strong> — attributed to frequent checkpointing (minimizing lost work per restart) and heavy automation (manual intervention needed only 3 times in 54 days). This is the direct operational payoff of getting fault tolerance + fast detection right: a hung/failed rank costs you the time-to-detect (bounded by your timeout setting) plus the time-to-restart-from-checkpoint, not the whole job.</div>
 </section>
 
-<!-- 11. FRAMEWORK, API & PROFILING -->
+<!-- 12. FRAMEWORK, API & PROFILING -->
 <section id="integration">
-  <h2>11. Framework Integration, NCCL C API &amp; Profiling</h2>
+  <h2>12. Framework Integration, NCCL C API &amp; Profiling</h2>
 
   <h3>How training frameworks actually call NCCL</h3>
   <p>Everything in §4-§5 benchmarks NCCL in isolation via nccl-tests — here's how that connects to what a real training job experiences. In PyTorch, <code>torch.distributed.init_process_group(backend="nccl")</code> is the entry point; every subsequent collective call (`all_reduce`, `all_gather`, etc.) on a process group backed by NCCL maps directly onto the same NCCL collectives this page benchmarks. Critically, <strong>NCCL's own timeout/error-detection only takes effect when async error handling is enabled</strong> (see §10) — without it, PyTorch's `ProcessGroupNCCL` doesn't proactively surface async NCCL errors, which is exactly the silent-hang failure mode described above.</p>
@@ -673,23 +720,39 @@
   <p>The <strong>NCCL Profiler plugin API</strong> (introduced alongside PAT in 2.23) provides start/stop event callbacks so external tools can track async NCCL operations. <strong>Important caveat</strong>: Nsight Systems can trace NCCL activity on the CPU-side timeline (kernel launches, API calls), but it <strong>cannot capture the actual GPU-to-GPU communication itself</strong> — NCCL uses direct memory load/store between GPUs, not `cudaMemcpy`, so there's no discrete "copy" event for a profiler to hook. If you're trying to see fabric-level communication detail, Nsight alone won't show it; you need NCCL's own instrumentation (`NCCL_DEBUG=INFO`, the Profiler plugin, or vendor-specific telemetry like NVIDIA Spectrum-X's NCCL plugin "NetInspector").</p>
 </section>
 
-<!-- 12. OTHER COLLECTIVE LIBS -->
+<!-- 13. OTHER COLLECTIVE LIBS -->
 <section id="other-libs">
-  <h2>12. Comparison to Other Collective Communication Libraries</h2>
+  <h2>13. Comparison to Other Collective Communication Libraries</h2>
   <p class="muted">This page is NVIDIA-focused, but it's worth knowing what exists outside the NVIDIA stack — especially if you ever touch heterogeneous or mixed-vendor clusters.</p>
   <table>
     <tr><th>Library</th><th>Vendor / maintainer</th><th>Target hardware</th><th>NCCL API compatibility</th><th>Primary use case</th></tr>
     <tr><td><strong>NCCL</strong></td><td>NVIDIA</td><td>NVIDIA GPUs</td><td>— (reference)</td><td>Default collective library for NVIDIA GPU training/inference</td></tr>
-    <tr><td><strong>RCCL</strong></td><td>AMD</td><td>AMD GPUs (ROCm, MI300X etc.)</td><td><strong>Drop-in compatible</strong> — same call surface, minimal/no code changes to retarget</td><td>AMD GPU equivalent of NCCL; matters directly if you ever work with AMD/MI300X clusters — the API knowledge transfers</td></tr>
+    <tr><td><strong>RCCL</strong></td><td>AMD</td><td>AMD GPUs (ROCm, MI300X/MI350X etc.)</td><td><strong>Drop-in compatible</strong> — API "largely modeled after NCCL," apps can typically retarget by relinking</td><td>AMD GPU equivalent of NCCL; matters directly if you ever work with AMD/MI300X clusters — the API knowledge transfers</td></tr>
     <tr><td><strong>UCC</strong> (Unified Collective Communication)</td><td>UCF Consortium, built on UCX</td><td>Vendor-neutral (CPU, CUDA — can wrap NCCL itself)</td><td>Not a replacement — can use <strong>NCCL as a backend "Team Layer" underneath it</strong></td><td>Vendor-neutral collective API consumed by OpenMPI and available as a PyTorch distributed backend; relevant for heterogeneous/mixed-vendor clusters</td></tr>
     <tr><td><strong>oneCCL</strong></td><td>UXL Foundation (Intel-originated)</td><td>Intel Data Center GPU Max/Flex (SYCL)</td><td>Not compatible — separate API, explicitly positioned as an NCCL alternative</td><td>Intel GPU collective communication; selectable Horovod backend. Lowest relevance unless Intel GPU hardware is in scope</td></tr>
   </table>
-  <p class="muted">Sources: <a href="https://rocm.docs.amd.com/projects/rccl/en/develop/" target="_blank">RCCL docs</a>, <a href="https://github.com/ROCm/rccl" target="_blank">ROCm/rccl</a>, <a href="https://github.com/openucx/ucc" target="_blank">openucx/ucc</a>, <a href="https://docs.nvidia.com/networking/display/HPCXv217/Unified+Collective+Communication+(UCC)" target="_blank">NVIDIA HPC-X UCC docs</a>, <a href="https://github.com/uxlfoundation/oneCCL" target="_blank">uxlfoundation/oneCCL</a>, <a href="https://horovod.readthedocs.io/en/stable/oneccl_include.html" target="_blank">Horovod oneCCL docs</a>.</p>
+
+  <h3>RCCL — version &amp; positioning update (Sept 2026)</h3>
+  <p>RCCL 2.30.4 (Aug 2026) tracks upstream NCCL 2.30.3/2.30.4 — recent NCCL feature merges (symmetric memory support, GPU-initiated networking device API, one-sided host APIs) have flowed into RCCL. MI350X/MI355X adds DPX compute-partitioning and NPS2 memory-partitioning modes; a rule-based, topology-aware <strong>RCCL Tuner Plugin API</strong> was added specifically to optimize MI300X inter-chiplet communication.</p>
+  <div class="callout warn"><strong>Repo move:</strong> <code>github.com/ROCm/rccl</code> and <code>github.com/ROCm/rccl-tests</code> are now marked <strong>[DEPRECATED]</strong> — both have been folded into AMD's <code>ROCm/rocm-systems</code> monorepo. Current source: <a href="https://github.com/ROCm/rocm-systems/tree/develop/projects/rccl" target="_blank">github.com/ROCm/rocm-systems/tree/develop/projects/rccl</a>. Docs remain at the stable URL below. Update any bookmarked repo links accordingly.</div>
+  <p class="muted">Network transport note: RCCL uses Infinity Fabric (xGMI) intra-node, and supports <strong>InfiniBand Verbs, RoCE, or TCP/IP sockets</strong> inter-node — it is not RoCE/Ethernet-only.</p>
+
+  <h3>Real cross-vendor interconnect comparison (sourced, Sept 2026)</h3>
+  <table>
+    <tr><th>Metric</th><th>NVIDIA H100 (NVLink 4.0)</th><th>AMD MI300X (Infinity Fabric)</th></tr>
+    <tr><td>Per-GPU interconnect bandwidth</td><td>900 GB/s bidirectional</td><td>128 GB/s bidirectional per link (7×64 GB/s point-to-point mesh, ~896 GB/s aggregate)</td></tr>
+    <tr><td>Topology</td><td>Switched (NVSwitch), supports in-network reduction (SHARP)</td><td>Point-to-point mesh, no switch</td></tr>
+    <tr><td>Collective efficiency vs theoretical peak</td><td>~85%</td><td>~70%</td></tr>
+    <tr><td>8-GPU AllReduce scaling</td><td>—</td><td>64 GB/s (2 GPU) → 192 GB/s (4 GPU) → 448 GB/s (8 GPU)</td></tr>
+  </table>
+  <p class="muted">The switched NVSwitch topology with in-network reduction is the cited reason NVIDIA collectives outperform AMD's point-to-point mesh at real-world message sizes. Source: <a href="https://arxiv.org/pdf/2510.27583" target="_blank">arXiv:2510.27583</a> — "AMD MI300X GPU Performance Analysis." AMD's own MI300X RCCL AllReduce acceptance bar is 304 GB/s in-place busbw at 8GB message size — a self-published pass/fail threshold, not a head-to-head claim: <a href="https://instinct.docs.amd.com/projects/system-acceptance/en/latest/common/rccl-benchmarking.html" target="_blank">AMD Instinct RCCL benchmarking guide</a>.</p>
+
+  <p class="muted">Sources: <a href="https://rocm.docs.amd.com/projects/rccl/en/latest/" target="_blank">RCCL docs</a>, <a href="https://github.com/ROCm/rocm-systems/tree/develop/projects/rccl" target="_blank">ROCm/rocm-systems (rccl)</a>, <a href="https://rocm.blogs.amd.com/software-tools-optimization/cpx-rccl-tuner/README.html" target="_blank">AMD blog — RCCL Tuner API for MI300X</a>, <a href="https://github.com/openucx/ucc" target="_blank">openucx/ucc</a>, <a href="https://docs.nvidia.com/networking/display/HPCXv217/Unified+Collective+Communication+(UCC)" target="_blank">NVIDIA HPC-X UCC docs</a>, <a href="https://github.com/uxlfoundation/oneCCL" target="_blank">uxlfoundation/oneCCL</a>, <a href="https://horovod.readthedocs.io/en/stable/oneccl_include.html" target="_blank">Horovod oneCCL docs</a>.</p>
 </section>
 
-<!-- 11. RESOURCES -->
+<!-- 14. RESOURCES -->
 <section id="resources">
-  <h2>13. Resources</h2>
+  <h2>14. Resources</h2>
   <h3>GitHub</h3>
   <ul>
     <li><a href="https://github.com/NVIDIA/nccl" target="_blank">github.com/NVIDIA/nccl</a> — core library</li>
@@ -708,9 +771,9 @@
   </ul>
 </section>
 
-<!-- 14. RUN GUIDE -->
+<!-- 15. RUN GUIDE -->
 <section id="run-guide">
-  <h2>14. How to run nccl-tests</h2>
+  <h2>15. How to run nccl-tests</h2>
   <h3>Build</h3>
   <pre><code>git clone https://github.com/NVIDIA/nccl-tests.git
 cd nccl-tests
