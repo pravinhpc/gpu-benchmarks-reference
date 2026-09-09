@@ -85,6 +85,10 @@
   .callout.warn{border-left-color:var(--warn); background:#191207}
   svg{display:block; margin:16px auto; max-width:100%;}
   .svgwrap{background:#0a0d10; border:1px solid var(--border); border-radius:10px; padding:16px;}
+
+  html{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
+  img,pre,code{-webkit-user-drag:none;}
+  @media print{ body{display:none !important;} }
 </style>
 </head>
 <body>
@@ -313,5 +317,26 @@ docker run --rm --gpus all gpu-burn</code></pre>
 <div id="bottom" style="scroll-margin-top:20px;"></div>
 </div>
 
+
+<script>
+(function(){
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  document.addEventListener('dragstart', function(e){ e.preventDefault(); });
+  document.addEventListener('copy', function(e){ e.preventDefault(); });
+  document.addEventListener('cut', function(e){ e.preventDefault(); });
+  document.addEventListener('keydown', function(e){
+    var k = e.key ? e.key.toLowerCase() : '';
+    if (
+      k === 'f12' ||
+      (e.ctrlKey && (k === 'u' || k === 's' || k === 'p' || k === 'c')) ||
+      (e.metaKey && (k === 's' || k === 'p' || k === 'c')) ||
+      (e.ctrlKey && e.shiftKey && (k === 'i' || k === 'j' || k === 'c')) ||
+      (e.metaKey && e.altKey && (k === 'i' || k === 'j' || k === 'c'))
+    ) {
+      e.preventDefault();
+    }
+  });
+})();
+</script>
 </body>
 </html>
