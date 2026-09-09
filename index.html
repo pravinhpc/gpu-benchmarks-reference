@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPU Benchmarks &amp; Model Reference — Index</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#12151a; --panel2:#171b21; --border:#242a33;
+    --text:#e6e9ee; --muted:#9aa4b2; --accent:#76b900; --accent2:#9fe870;
+    --link:#7cc4ff; --warn:#f2b84b;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 90px}
+  header.hero{
+    background:linear-gradient(135deg,#151a12,#0b0d10 70%);
+    border:1px solid var(--border); border-radius:16px;
+    padding:40px 32px; margin-bottom:32px;
+  }
+  header.hero h1{margin:0 0 8px; font-size:2.4rem; letter-spacing:-0.02em; color:var(--accent2);}
+  header.hero p.tag{color:var(--muted); margin:0; font-size:1.05rem}
+  h2.group{color:var(--accent2); font-size:1.1rem; margin:36px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--border);}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px;}
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:20px 22px; text-decoration:none; display:block; color:var(--text);
+    transition:border-color .15s;
+  }
+  .card:hover{border-color:var(--accent);}
+  .card.placeholder{opacity:.5; cursor:default;}
+  .card h3{margin:0 0 6px; color:var(--accent2); font-size:1.1rem;}
+  .card p{margin:0; color:var(--muted); font-size:.88rem;}
+  .badge{
+    display:inline-block; font-size:.68rem; padding:2px 8px; border-radius:10px;
+    background:#1d2a10; color:var(--accent2); border:1px solid #2e4118; margin-left:6px; vertical-align:middle;
+  }
+  .badge.todo{background:#171b21; color:var(--muted); border-color:var(--border);}
+  .footer{color:var(--muted); text-align:center; font-size:.8rem; margin-top:40px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>GPU Benchmarks &amp; Model Reference</h1>
+  <p class="tag">In-and-out reference docs for the models and diagnostic tests run across GPU fleets — architecture, tuning, benchmarks, and cross-CSP notes. Compiled starting 2026-09-07.</p>
+</header>
+
+<h2 class="group">Model training benchmarks</h2>
+<div class="grid">
+  <a class="card" href="nemotron.html">
+    <h3>Nemotron <span class="badge">done</span></h3>
+    <p>NVIDIA's open LLM family — what/why, training→inference pipeline, evaluation, all model variants, resources.</p>
+  </a>
+  <a class="card" href="megatron.html">
+    <h3>Megatron-LM &amp; Megatron-Core <span class="badge">done</span></h3>
+    <p>5D parallelism (TP/PP/DP/SP/CP/EP), config params, real MFU benchmarks + interactive explorer.</p>
+  </a>
+</div>
+
+<h2 class="group">Communication / fabric</h2>
+<div class="grid">
+  <a class="card" href="nccl.html">
+    <h3>NCCL &amp; nccl-tests <span class="badge">done</span></h3>
+    <p>Collective comms library — ring/tree/NVLS algorithms, env-var tuning, all test types, busbw interpretation, cross-CSP notes.</p>
+  </a>
+</div>
+
+<h2 class="group">Compute benchmarks</h2>
+<div class="grid">
+  <a class="card" href="hpl.html">
+    <h3>HPL / LINPACK <span class="badge">done</span></h3>
+    <p>Top500 dense linear algebra benchmark — N/NB/P×Q tuning, HPL vs HPL-AI/MxP vs HPCG, real TOP500 numbers + P×Q calculator.</p>
+  </a>
+</div>
+
+<h2 class="group">Stress / burn-in</h2>
+<div class="grid">
+  <a class="card" href="gpu-burn.html">
+    <h3>gpu-burn &amp; DCGM Diagnostics <span class="badge">done</span></h3>
+    <p>GPU stress-test / thermal-throttle &amp; correctness burn-in, plus DCGM diag levels 1-4 + EUD with real timing data.</p>
+  </a>
+</div>
+
+<div class="footer">
+  Public reference — no internal/NVIDIA-SSO-gated content. Not yet published anywhere; will only be pushed when explicitly requested.
+</div>
+
+</div>
+</body>
+</html>

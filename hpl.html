@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPL / LINPACK — Complete Reference</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#12151a; --panel2:#171b21; --border:#242a33;
+    --text:#e6e9ee; --muted:#9aa4b2; --accent:#76b900; --accent2:#9fe870;
+    --link:#7cc4ff; --warn:#f2b84b; --code:#1a1f26;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 90px; margin-left:280px;}
+  header.hero{
+    background:linear-gradient(135deg,#151a12,#0b0d10 70%);
+    border:1px solid var(--border); border-radius:16px;
+    padding:36px 32px; margin-bottom:28px; scroll-margin-top:20px;
+  }
+  header.hero h1{margin:0 0 8px; font-size:2.2rem; letter-spacing:-0.02em; color:var(--accent2);}
+  header.hero p.tag{color:var(--muted); margin:0; font-size:1.05rem}
+  .sidebar{
+    position:fixed; top:0; left:0; width:260px; height:100vh; overflow-y:auto;
+    background:var(--panel); border-right:1px solid var(--border);
+    padding:22px 14px 40px; box-sizing:border-box; z-index:40;
+  }
+  .sidebar-title{color:var(--accent2); font-weight:700; font-size:1.05rem; margin-bottom:2px; font-family:monospace;}
+  .sidebar-sub{color:var(--muted); font-size:.7rem; margin-bottom:18px; line-height:1.4;}
+  .sidebar a{
+    display:block; padding:7px 10px; margin-bottom:2px; border-radius:6px;
+    color:var(--text); text-decoration:none; font-size:.8rem; font-family:monospace;
+    border-left:2px solid transparent; white-space:normal;
+  }
+  .sidebar a:hover{background:var(--panel2); color:var(--accent2); border-left-color:var(--accent);}
+  .sidebar a.internal-link{color:var(--warn);}
+  .scroll-btns{position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:10px; z-index:50;}
+  .scroll-btns a{
+    background:var(--accent); color:#0d1117; font-weight:700; text-decoration:none;
+    width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.45); font-size:1.2rem; font-family:monospace;
+  }
+  .scroll-btns a:hover{background:var(--accent2);}
+  @media(max-width:900px){
+    .sidebar{position:static; width:auto; height:auto; border-right:none; border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; gap:6px;}
+    .sidebar-title,.sidebar-sub{width:100%;}
+    .wrap{margin-left:auto;}
+  }
+  section{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:26px 28px; margin-bottom:22px; scroll-margin-top:20px;
+  }
+  section h2{color:var(--accent2); font-size:1.35rem; margin-top:0; border-bottom:1px solid var(--border); padding-bottom:10px;}
+  section h3{color:var(--text); font-size:1.05rem; margin-bottom:6px}
+  p{color:var(--text)}
+  .muted{color:var(--muted)}
+  a{color:var(--link)}
+  code, .mono{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--code); padding:1px 6px; border-radius:4px; font-size:.88em; color:#d9e3ea;
+  }
+  pre{background:var(--code); border:1px solid var(--border); border-radius:10px; padding:16px; overflow-x:auto; font-size:.85rem;}
+  pre code{background:none; padding:0}
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.9rem}
+  th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2); font-weight:600}
+  tr:nth-child(even) td{background:#101318}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+  .card{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
+  .badge{
+    display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:10px;
+    background:#1d2a10; color:var(--accent2); border:1px solid #2e4118; margin-left:6px;
+  }
+  .badge.internal{background:#2a1a10; color:var(--warn); border-color:#4a3419}
+  ul{padding-left:20px}
+  li{margin-bottom:5px}
+  .footer{color:var(--muted); text-align:center; font-size:.8rem; margin-top:30px}
+  .callout{border-left:3px solid var(--accent); background:#0f150a; padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0; font-size:.92rem;}
+  .callout.warn{border-left-color:var(--warn); background:#191207}
+  svg{display:block; margin:16px auto; max-width:100%;}
+  .svgwrap{background:#0a0d10; border:1px solid var(--border); border-radius:10px; padding:16px;}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-title">HPL / LINPACK</div>
+  <div class="sidebar-sub">Public reference<br>compiled 2026-09-07</div>
+  <a href="#top">↑ Top</a>
+  <a href="#what">1 · What &amp; Why</a>
+  <a href="#how-runs">2 · How it Runs (Algorithm)</a>
+  <a href="#config">3 · HPL.dat Tuning Params</a>
+  <a href="#variants">4 · Test Variants</a>
+  <a href="#measured">5 · How it's Measured</a>
+  <a href="#charts">6 · Benchmark Charts</a>
+  <a href="#explorer">7 · Interactive Tools</a>
+  <a href="#resources">8 · Resources</a>
+  <a href="#run-guide">9 · How to Run</a>
+  <a href="#bottom">↓ Bottom</a>
+</nav>
+
+<div class="scroll-btns">
+  <a href="#top" title="Back to top">↑</a>
+  <a href="#bottom" title="Jump to bottom">↓</a>
+</div>
+
+<div class="wrap">
+
+<header class="hero" id="top">
+  <h1>HPL / LINPACK</h1>
+  <p class="tag">The benchmark that ranks the world's fastest supercomputers — dense linear algebra at full-system scale, still the standard GPU cluster acceptance test — public reference, compiled 2026-09-07.</p>
+</header>
+
+<!-- 1. WHAT / WHY -->
+<section id="what">
+  <h2>1. What is HPL, and why does it matter?</h2>
+  <p><strong>HPL (High-Performance Linpack)</strong> traces back to the LINPACK software package created in the 1970s-80s by Jack Dongarra and colleagues at Argonne National Laboratory / University of Tennessee. HPL, the modern parallel variant introduced in the 1990s, generates a dense <em>n×n</em> linear system <code>Ax=b</code>, solves it via LU factorization with partial row pivoting followed by triangular solves — roughly <code>(2/3)N³</code> FLOPs total.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Why it's important</h3>
+      <ul>
+        <li><strong>The TOP500 standard</strong> — HPL has ranked the world's fastest supercomputers since 1993. Every major system's public reputation rests on this one number.</li>
+        <li><strong>Full-system stress test</strong> — sustaining near-peak FLOPS across an entire cluster for an extended run stresses power delivery, cooling, and interconnect simultaneously. A cluster that can't hold near-peak HPL performance for the full run duration usually has a real hardware or power/thermal issue — which is exactly why it's still used for <strong>GPU cluster acceptance testing</strong> today, criticism notwithstanding.</li>
+        <li><strong>Widely criticized, still standard</strong> — HPL is almost purely compute-bound and doesn't reflect real HPC/AI application performance well (this criticism is exactly why HPCG was created — see §4). Despite that, it remains the universal reference point because it's been consistent since 1993.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What it's used for</h3>
+      <ul>
+        <li>TOP500 list submissions (public bragging rights + procurement validation)</li>
+        <li>New GPU cluster acceptance testing — proving a cluster sustains near-peak FLOPS at full scale before handoff</li>
+        <li>Power/cooling/interconnect stress testing under sustained maximal load</li>
+        <li>Customer validation deliverables — real-world runs are used as procurement/acceptance evidence</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 2. HOW IT RUNS -->
+<section id="how-runs">
+  <h2>2. How it runs (algorithm)</h2>
+  <p>HPL processes the matrix in <strong>panels</strong>: each step does a <strong>panel factorization</strong> (LU decomposition of a column block) followed by a <strong>trailing matrix update</strong> (applying that transformation to the remaining unfactored submatrix via large GEMM operations). The trailing-matrix-update dominates and is O(n³) FLOPs against O(n²) data movement — high arithmetic intensity is exactly why HPL can sustain a large fraction of theoretical peak, unlike memory-bound codes (contrast with HPCG, §4).</p>
+
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="hplArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#7cc4ff"/></marker></defs>
+    <text x="450" y="24" text-anchor="middle" fill="#9fe870" font-family="monospace" font-size="15">Blocked LU — panel factorization + trailing matrix update</text>
+
+    <rect x="60" y="50" width="70" height="160" fill="#171b21" stroke="#f2b84b" stroke-width="2"/>
+    <text x="95" y="45" text-anchor="middle" fill="#f2b84b" font-family="monospace" font-size="10">panel</text>
+    <rect x="130" y="50" width="700" height="160" fill="#171b21" stroke="#242a33" stroke-width="1"/>
+    <rect x="130" y="50" width="700" height="45" fill="#171b21" stroke="#7cc4ff" stroke-width="2"/>
+    <text x="480" y="40" text-anchor="middle" fill="#7cc4ff" font-family="monospace" font-size="10">active row block</text>
+    <rect x="130" y="95" width="700" height="115" fill="#12151a" stroke="#76b900" stroke-width="2"/>
+    <text x="480" y="160" text-anchor="middle" fill="#76b900" font-family="monospace" font-size="13">trailing matrix update (GEMM) — the O(n³) part</text>
+
+    <path d="M 95 210 L 95 230" fill="none" stroke="#f2b84b" stroke-width="2" marker-end="url(#hplArrow)"/>
+    <text x="95" y="248" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="10">factorize next panel</text>
+    <path d="M 480 95 L 480 230" fill="none" stroke="#76b900" stroke-width="2" marker-end="url(#hplArrow)" stroke-dasharray="4,3"/>
+    <text x="600" y="248" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="10">update applies to entire remaining submatrix</text>
+  </svg>
+  </div>
+
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+    <text x="450" y="24" text-anchor="middle" fill="#9fe870" font-family="monospace" font-size="15">2D block-cyclic distribution — P×Q process grid (P=3, Q=4)</text>
+    <g font-family="monospace" font-size="11" text-anchor="middle">
+    <!-- 3x4 grid of process cells -->
+    <rect x="100" y="50" width="150" height="50" fill="#171b21" stroke="#7cc4ff" stroke-width="2"/><text x="175" y="80" fill="#e6e9ee">P0Q0</text>
+    <rect x="250" y="50" width="150" height="50" fill="#171b21" stroke="#7cc4ff" stroke-width="2"/><text x="325" y="80" fill="#e6e9ee">P0Q1</text>
+    <rect x="400" y="50" width="150" height="50" fill="#171b21" stroke="#7cc4ff" stroke-width="2"/><text x="475" y="80" fill="#e6e9ee">P0Q2</text>
+    <rect x="550" y="50" width="150" height="50" fill="#171b21" stroke="#7cc4ff" stroke-width="2"/><text x="625" y="80" fill="#e6e9ee">P0Q3</text>
+
+    <rect x="100" y="100" width="150" height="50" fill="#171b21" stroke="#76b900" stroke-width="2"/><text x="175" y="130" fill="#e6e9ee">P1Q0</text>
+    <rect x="250" y="100" width="150" height="50" fill="#171b21" stroke="#76b900" stroke-width="2"/><text x="325" y="130" fill="#e6e9ee">P1Q1</text>
+    <rect x="400" y="100" width="150" height="50" fill="#171b21" stroke="#76b900" stroke-width="2"/><text x="475" y="130" fill="#e6e9ee">P1Q2</text>
+    <rect x="550" y="100" width="150" height="50" fill="#171b21" stroke="#76b900" stroke-width="2"/><text x="625" y="130" fill="#e6e9ee">P1Q3</text>
+
+    <rect x="100" y="150" width="150" height="50" fill="#171b21" stroke="#f2b84b" stroke-width="2"/><text x="175" y="180" fill="#e6e9ee">P2Q0</text>
+    <rect x="250" y="150" width="150" height="50" fill="#171b21" stroke="#f2b84b" stroke-width="2"/><text x="325" y="180" fill="#e6e9ee">P2Q1</text>
+    <rect x="400" y="150" width="150" height="50" fill="#171b21" stroke="#f2b84b" stroke-width="2"/><text x="475" y="180" fill="#e6e9ee">P2Q2</text>
+    <rect x="550" y="150" width="150" height="50" fill="#171b21" stroke="#f2b84b" stroke-width="2"/><text x="625" y="180" fill="#e6e9ee">P2Q3</text>
+    </g>
+    <text x="450" y="220" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">12 MPI ranks = P(3) × Q(4). Blocks dealt round-robin —</text>
+    <text x="450" y="238" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">keeps every rank's workload balanced as factorization proceeds.</text>
+  </svg>
+  </div>
+
+  <p class="muted">NVIDIA's GPU-accelerated HPL is distributed via the <code>nvcr.io/nvidia/hpc-benchmarks</code> NGC container. GPUs handle the compute-heavy trailing matrix update (large GEMMs); CPUs typically handle panel factorization and pivoting logistics — the split is tuned via NB (§3). Source: <a href="https://www.glennklockwood.com/garden/HPL" target="_blank">glennklockwood.com HPL</a>, <a href="https://docs.nvidia.com/nvidia-hpc-benchmarks/HPL_benchmark.html" target="_blank">NVIDIA HPL Benchmark docs</a>.</p>
+</section>
+
+<!-- 3. CONFIG -->
+<section id="config">
+  <h2>3. HPL.dat tuning parameters</h2>
+  <table>
+    <tr><th>Parameter</th><th>Meaning</th><th>GPU tuning guidance</th></tr>
+    <tr><td><code>N</code></td><td>Order of the coefficient matrix (problem size)</td><td>Large enough to fill ~80-90% of available memory — too small under-stresses the system and gives a misleadingly low efficiency number. General guidance: GPU benchmarking should target ~90% of memory vs. 70-80% for CPU-only runs.</td></tr>
+    <tr><td><code>NB</code></td><td>Partitioning block size</td><td>GPU HPL typically uses much larger NB (256–1024) than CPU-only HPL (128–256), tuned to the GPU's own GEMM tile size.</td></tr>
+    <tr><td><code>P</code>, <code>Q</code></td><td>Process grid dimensions — P×Q = total MPI ranks</td><td>Keep P ≤ Q, and the grid as close to square as practical for communication balance. See the P×Q calculator in §7.</td></tr>
+    <tr><td><code>PFACT</code></td><td>Panel factorization variant (left-looking / Crout / right-looking — numerically equivalent)</td><td>Affects panel-factorization performance profile; usually swept to find the best for a given system.</td></tr>
+    <tr><td><code>NBMIN</code></td><td>Recursion stops when panel ≤ NBMIN columns, switches to matrix-vector-based factorization</td><td>Classic recursion uses NDIV=2, NBMIN=1.</td></tr>
+    <tr><td><code>NDIV</code></td><td>Number of subpanels the panel factorization divides into at each recursive step</td><td>—</td></tr>
+    <tr><td><code>RFACT</code></td><td>Recursive factorization algorithm choice (same 3 variants as PFACT)</td><td>—</td></tr>
+    <tr><td><code>BCAST</code></td><td>Broadcast algorithm for panel communication</td><td>Tune per interconnect topology.</td></tr>
+    <tr><td><code>DEPTH</code></td><td>Lookahead depth — how far ahead the next panel factorization starts while the current trailing update finishes</td><td>Overlaps communication with computation.</td></tr>
+  </table>
+  <div class="callout"><code>xhpl</code> accepts multiple values per parameter and will run every combination — useful for empirically finding the best config, but slow. Production/submission runs use one tuned combination. Source: <a href="https://www.netlib.org/benchmark/hpl/tuning.html" target="_blank">netlib.org HPL tuning</a>.</div>
+</section>
+
+<!-- 4. VARIANTS -->
+<section id="variants">
+  <h2>4. Test variants — HPL vs HPL-AI/HPL-MxP vs HPCG</h2>
+  <table>
+    <tr><th>Variant</th><th>Precision</th><th>What it measures</th><th>Why run it</th></tr>
+    <tr><td><strong>HPL</strong></td><td>FP64 (double)</td><td>Pure dense-matrix compute throughput</td><td>The TOP500-ranking standard; validates raw FLOPS + full-system stability under sustained compute load.</td></tr>
+    <tr><td><strong>HPL-AI / HPL-MxP</strong></td><td>Mixed precision (low-precision LU factorization + GMRES-based iterative refinement to reach FP64-equivalent accuracy)</td><td>Exploits Tensor Cores for much higher raw FLOPS while still validating to FP64 accuracy</td><td>Shows HPC/AI convergence — what a system can do leveraging the same low-precision hardware paths used for AI training/inference. NVIDIA's HPL-MxP (in the <code>hpc-benchmarks</code> container) is understood to be the same research lineage/successor to "HPL-AI" (same Dongarra/Luszczek group, same technique) — not explicitly confirmed as an official rename, flagged rather than asserted.</td></tr>
+    <tr><td><strong>HPCG</strong></td><td>FP64</td><td>Sparse iterative solver (conjugate gradient + symmetric Gauss-Seidel preconditioning) on a 27-point stencil 3D PDE — irregular memory access, low arithmetic intensity</td><td>The standard complement to HPL: HPCG typically achieves only <strong>1-5% of theoretical peak</strong> because it's memory-bandwidth-bound, not compute-bound — much closer to how real scientific/HPC applications actually behave.</td></tr>
+  </table>
+  <div class="callout">You run more than one because HPL alone can make a system look better than it performs on real applications — HPCG is the standard complement that catches that gap, and HPL-MxP shows AI-relevant mixed-precision throughput. Source: <a href="https://en.wikipedia.org/wiki/HPCG_benchmark" target="_blank">HPCG benchmark (Wikipedia)</a>, <a href="https://www.netlib.org/utk/people/JackDongarra/PAPERS/hpcg-a-new.pdf" target="_blank">Dongarra &amp; Heroux HPCG paper</a>, <a href="https://arxiv.org/pdf/2509.19618" target="_blank">arXiv:2509.19618</a> (HPL-MxP paper).</div>
+</section>
+
+<!-- 5. MEASURED -->
+<section id="measured">
+  <h2>5. How results are measured</h2>
+  <div class="grid3">
+    <div class="card"><strong>Rmax</strong><p class="muted">Achieved performance (measured, in FLOP/s) — the official TOP500 ranking number.</p></div>
+    <div class="card"><strong>Rpeak</strong><p class="muted">Theoretical peak performance of the full system (sum of every core/GPU's peak FP64 FLOPS).</p></div>
+    <div class="card"><strong>Nmax</strong><p class="muted">The problem size (N) used to achieve Rmax.</p></div>
+  </div>
+  <p><strong>Efficiency = Rmax / Rpeak</strong> (as a percentage) is the standard way to judge how well a system/tuning realizes its theoretical potential. Typical "well-tuned" GPU cluster efficiency is cited in the 78-90% range across several sources — but real published flagship numbers (§6) often land lower than that, so treat 78-90% as an upper-bound aspiration, not a guarantee.</p>
+</section>
+
+<!-- 6. CHARTS -->
+<section id="charts">
+  <h2>6. Benchmark charts — real published numbers</h2>
+  <p class="muted">Live-verified 2026-09-07 against TOP500 and NVIDIA sources. GB200/Blackwell-specific HPL Rmax numbers were not found in public search this pass — excluded rather than guessed.</p>
+
+  <h3>Rmax vs Rpeak — real TOP500 systems (efficiency = Rmax/Rpeak)</h3>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+    <text x="450" y="24" text-anchor="middle" fill="#9fe870" font-family="monospace" font-size="14">Rmax (bright) vs Rpeak (dim) — same units per row</text>
+
+    <text x="200" y="60" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">El Capitan (AMD MI300A)</text>
+    <rect x="210" y="42" width="642" height="16" fill="#7cc4ff" opacity="0.35"/>
+    <rect x="210" y="42" width="411" height="16" fill="#7cc4ff"/>
+    <text x="860" y="55" fill="#9aa4b2" font-family="monospace" font-size="10">64.1%</text>
+
+    <text x="200" y="110" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">NVIDIA Eos (4,608× H100)</text>
+    <rect x="210" y="92" width="642" height="16" fill="#76b900" opacity="0.35"/>
+    <rect x="210" y="92" width="413" height="16" fill="#76b900"/>
+    <text x="860" y="105" fill="#9aa4b2" font-family="monospace" font-size="10">64.4%</text>
+
+    <text x="450" y="150" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">El Capitan: Rmax 1.809 / Rpeak 2.821 ExaFLOP/s. NVIDIA Eos: Rmax 121.4 / Rpeak 188.65 PFlop/s.</text>
+    <text x="450" y="170" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">Both land near 64% — below the 78-90% "well-tuned" range often cited; varies a lot by interconnect/tuning.</text>
+  </svg>
+  </div>
+
+  <h3>HPL vs HPCG — why you need both</h3>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 160" xmlns="http://www.w3.org/2000/svg">
+    <text x="450" y="24" text-anchor="middle" fill="#9fe870" font-family="monospace" font-size="14">Typical % of theoretical peak achieved</text>
+    <text x="228" y="65" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">HPL (compute-bound)</text>
+    <rect x="236" y="52" width="600" height="24" fill="#76b900"/><text x="850" y="69" fill="#e6e9ee" font-family="monospace" font-size="12">~65-90%</text>
+    <text x="228" y="103" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">HPCG (memory-bound)</text>
+    <rect x="236" y="90" width="30" height="24" fill="#f2b84b"/><text x="280" y="107" fill="#e6e9ee" font-family="monospace" font-size="12">~1-5%</text>
+    <text x="450" y="140" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">The ~15-20× gap is exactly why HPCG exists — it's not a "worse" number, it's measuring a fundamentally different bottleneck.</text>
+  </svg>
+  </div>
+
+  <p class="muted">Other real reference points: <strong>JUPITER</strong> (Jülich, ~24,000 GH200 Grace Hopper Superchips, NVIDIA Quantum-2 IB) reached 1 ExaFLOP Rmax, #4 globally / #1 Europe, most energy-efficient exascale-class system on Green500 at 63 GFLOPS/watt (Rpeak not independently confirmed this pass, excluded from the efficiency chart above). Source: <a href="https://top500.org/lists/top500/2026/06/" target="_blank">TOP500 June 2026 list</a>, <a href="https://nvidianews.nvidia.com/news/nvidia-powers-europes-fastest-supercomputer" target="_blank">NVIDIA Newsroom — JUPITER</a>.</p>
+</section>
+
+<!-- 7. EXPLORER -->
+<section id="explorer">
+  <h2>7. Interactive Tools</h2>
+
+  <h3>P×Q process grid calculator</h3>
+  <p class="muted">Enter your total GPU/rank count — this computes valid P×Q factor pairs (P×Q = total ranks) and highlights the most balanced (closest-to-square, P≤Q) option, per the tuning guidance in §3. Pure arithmetic, not a benchmark prediction.</p>
+  <div class="card" style="margin-bottom:16px;">
+    <label for="hplRanks" style="display:block; margin-bottom:6px; color:#9fe870; font-family:monospace; font-size:.85rem;">Total ranks (GPUs)</label>
+    <input type="number" id="hplRanks" value="64" min="1" max="100000" style="width:200px; background:#0a0d10; color:#e6e9ee; border:1px solid #242a33; border-radius:6px; padding:8px; font-family:monospace;">
+  </div>
+  <div class="card">
+    <div id="hplGridOut" style="font-family:monospace; font-size:.9rem;"></div>
+  </div>
+
+  <h3 style="margin-top:22px;">System efficiency lookup</h3>
+  <p class="muted">Real Rmax/Rpeak pairs from §6 — pick a system to see the numbers and computed efficiency.</p>
+  <div class="card" style="margin-bottom:16px;">
+    <select id="hplSysSelect" style="width:100%; background:#0a0d10; color:#e6e9ee; border:1px solid #242a33; border-radius:6px; padding:8px; font-family:monospace;"></select>
+  </div>
+  <div class="svgwrap">
+    <svg viewBox="0 0 900 120" xmlns="http://www.w3.org/2000/svg">
+      <text x="450" y="24" text-anchor="middle" fill="#9fe870" font-family="monospace" font-size="14" id="hplSysTitle"></text>
+      <rect x="60" y="45" width="0" height="26" fill="#76b900" id="hplSysBar"/>
+      <text x="70" y="63" fill="#e6e9ee" font-family="monospace" font-size="12" font-weight="bold" id="hplSysBarLabel"></text>
+      <text x="60" y="100" fill="#9aa4b2" font-family="monospace" font-size="11" id="hplSysDetail"></text>
+    </svg>
+  </div>
+</section>
+
+<!-- 8. RESOURCES -->
+<section id="resources">
+  <h2>8. Resources</h2>
+  <h3>Official sources</h3>
+  <ul>
+    <li><a href="https://www.netlib.org/benchmark/hpl/" target="_blank">netlib.org/benchmark/hpl</a> — official HPL reference source + tuning docs</li>
+    <li><a href="https://catalog.ngc.nvidia.com/orgs/nvidia/containers/hpc-benchmarks" target="_blank">NGC hpc-benchmarks container</a> — bundles NVIDIA HPL, HPL-MxP, HPCG, STREAM, NVSHMEM, NVPL (current: <code>hpc-benchmarks:25.04</code>)</li>
+    <li><a href="https://docs.nvidia.com/nvidia-hpc-benchmarks/HPL_benchmark.html" target="_blank">NVIDIA HPL Benchmark docs</a>, <a href="https://docs.nvidia.com/nvidia-hpc-benchmarks/HPCG_benchmark.html" target="_blank">HPCG Benchmark docs</a></li>
+    <li><a href="https://nvidia.github.io/grace-cpu-benchmarking-guide/benchmarks/HPL/index.html" target="_blank">NVIDIA Grace CPU Benchmarking Guide — HPL</a></li>
+    <li><a href="https://top500.org" target="_blank">TOP500.org</a></li>
+  </ul>
+  <h3>Papers</h3>
+  <ul>
+    <li>Dongarra &amp; Heroux, "Toward a New Metric for Ranking High Performance Computing Systems" — <a href="https://www.netlib.org/utk/people/JackDongarra/PAPERS/hpcg-a-new.pdf" target="_blank">netlib.org</a> (the HPCG paper)</li>
+    <li>HPL-MxP benchmark paper (Dongarra &amp; Luszczek) — <a href="https://arxiv.org/pdf/2509.19618" target="_blank">arXiv:2509.19618</a></li>
+    <li>Aurora HPL/HPL-MxP lessons-learned — <a href="https://arxiv.org/pdf/2604.09517" target="_blank">arXiv:2604.09517</a></li>
+  </ul>
+</section>
+
+<!-- 9. RUN GUIDE -->
+<section id="run-guide">
+  <h2>9. How to run it</h2>
+  <h3>Get the container</h3>
+  <pre><code>docker pull nvcr.io/nvidia/hpc-benchmarks:25.04
+# Sample HPL.dat files ship inside at:
+#   /workspace/hpl-linux-x86_64/sample-dat/       (x86)
+#   /workspace/hpl-linux-aarch64-gpu/sample-dat/  (Grace/ARM)</code></pre>
+
+  <h3>Example Slurm launch (8 nodes × 8 GPUs = 64 GPUs)</h3>
+  <pre><code>srun -N 8 --ntasks-per-node=8 --cpu-bind=none --mpi=pmix \
+  --container-image="${CONT}" \
+  ./hpl.sh --dat /workspace/hpl-linux-x86_64/sample-dat/HPL-64GPUs.dat \
+  --gpu-affinity --cpu-affinity --mem-affinity --ucx-affinity</code></pre>
+  <p class="muted">The <code>hpl.sh</code> wrapper's affinity flags matter — misbinding to the wrong NUMA node/GPU directly kills efficiency.</p>
+
+  <h3>Interpreting output</h3>
+  <p>HPL prints, per (N, NB, P, Q) combination tested: wall-clock <strong>Time</strong>, achieved <strong>GFLOPS</strong>, and a PASSED/FAILED residual check verifying numerical correctness. <strong>A FAILED result means the run doesn't count</strong>, regardless of how fast it was.</p>
+
+  <h3>Common pitfalls</h3>
+  <ul>
+    <li><strong>N too small</strong> — doesn't fill memory or run long enough to reach steady-state performance; gives an artificially low, non-representative efficiency number.</li>
+    <li><strong>Wrong P×Q grid</strong> — a badly-shaped grid (far from square, or mismatched to physical network topology) kills scaling; use the calculator in §7.</li>
+    <li><strong>NB mismatched to GPU tile size</strong> — using CPU-typical NB values (128-256) on a GPU run leaves performance on the table.</li>
+  </ul>
+</section>
+
+<div id="bottom" style="scroll-margin-top:20px;"></div>
+</div>
+
+<script>
+(function(){
+  function computeGridOptions(n){
+    var options = [];
+    for (var p=1; p*p<=n; p++){
+      if (n % p === 0) options.push({p:p, q:n/p});
+    }
+    return options;
+  }
+  function renderGrid(){
+    var n = Math.max(1, Math.round(+document.getElementById('hplRanks').value || 1));
+    var opts = computeGridOptions(n);
+    var best = opts[opts.length-1];
+    var html = '<strong style="color:#9fe870;">Valid P×Q pairs for ' + n + ' ranks:</strong><br><br>';
+    opts.forEach(function(o){
+      var isBest = (o.p===best.p && o.q===best.q);
+      var ratio = (o.q/o.p).toFixed(2);
+      html += '<span style="color:' + (isBest ? '#9fe870' : '#e6e9ee') + ';' + (isBest ? 'font-weight:bold;' : '') + '">'
+        + 'P=' + o.p + ', Q=' + o.q + '  (aspect ' + ratio + (isBest ? ' — most square, recommended' : '') + ')</span><br>';
+    });
+    document.getElementById('hplGridOut').innerHTML = html;
+  }
+  document.getElementById('hplRanks').addEventListener('input', renderGrid);
+
+  var SYSTEMS = [
+    { label:'El Capitan (AMD MI300A)', rmax:1809, rpeak:2821, unit:'PFlop/s ×1000' },
+    { label:'NVIDIA Eos (4,608× H100)', rmax:121.4, rpeak:188.65, unit:'PFlop/s' }
+  ];
+  function renderSys(){
+    var sel = document.getElementById('hplSysSelect');
+    var sys = SYSTEMS[sel.selectedIndex];
+    var eff = (sys.rmax/sys.rpeak)*100;
+    var barPx = Math.max(4, Math.min(780, (eff/100)*780));
+    document.getElementById('hplSysTitle').textContent = sys.label + ' — efficiency';
+    document.getElementById('hplSysBar').setAttribute('width', barPx);
+    var lbl = document.getElementById('hplSysBarLabel');
+    var lx = 70 + barPx;
+    if (lx > 800){ lx = Math.max(70, barPx-70); lbl.setAttribute('fill','#0d1117'); } else { lbl.setAttribute('fill','#e6e9ee'); }
+    lbl.setAttribute('x', lx);
+    lbl.textContent = eff.toFixed(1) + '%';
+    document.getElementById('hplSysDetail').textContent = 'Rmax ' + sys.rmax + ' / Rpeak ' + sys.rpeak + ' ' + sys.unit;
+  }
+  function init(){
+    var sel = document.getElementById('hplSysSelect');
+    SYSTEMS.forEach(function(s){
+      var opt = document.createElement('option'); opt.textContent = s.label; sel.appendChild(opt);
+    });
+    sel.addEventListener('change', renderSys);
+    renderGrid();
+    renderSys();
+  }
+  if (document.getElementById('hplRanks')) {
+    document.addEventListener('DOMContentLoaded', init);
+  }
+})();
+</script>
+</body>
+</html>

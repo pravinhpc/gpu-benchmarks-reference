@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gpu-burn &amp; DCGM Diagnostics — Complete Reference</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#12151a; --panel2:#171b21; --border:#242a33;
+    --text:#e6e9ee; --muted:#9aa4b2; --accent:#76b900; --accent2:#9fe870;
+    --link:#7cc4ff; --warn:#f2b84b; --code:#1a1f26;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 90px; margin-left:280px;}
+  header.hero{
+    background:linear-gradient(135deg,#151a12,#0b0d10 70%);
+    border:1px solid var(--border); border-radius:16px;
+    padding:36px 32px; margin-bottom:28px; scroll-margin-top:20px;
+  }
+  header.hero h1{margin:0 0 8px; font-size:2.2rem; letter-spacing:-0.02em; color:var(--accent2);}
+  header.hero p.tag{color:var(--muted); margin:0; font-size:1.05rem}
+  .sidebar{
+    position:fixed; top:0; left:0; width:260px; height:100vh; overflow-y:auto;
+    background:var(--panel); border-right:1px solid var(--border);
+    padding:22px 14px 40px; box-sizing:border-box; z-index:40;
+  }
+  .sidebar-title{color:var(--accent2); font-weight:700; font-size:1.05rem; margin-bottom:2px; font-family:monospace;}
+  .sidebar-sub{color:var(--muted); font-size:.7rem; margin-bottom:18px; line-height:1.4;}
+  .sidebar a{
+    display:block; padding:7px 10px; margin-bottom:2px; border-radius:6px;
+    color:var(--text); text-decoration:none; font-size:.8rem; font-family:monospace;
+    border-left:2px solid transparent; white-space:normal;
+  }
+  .sidebar a:hover{background:var(--panel2); color:var(--accent2); border-left-color:var(--accent);}
+  .sidebar a.internal-link{color:var(--warn);}
+  .scroll-btns{position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:10px; z-index:50;}
+  .scroll-btns a{
+    background:var(--accent); color:#0d1117; font-weight:700; text-decoration:none;
+    width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.45); font-size:1.2rem; font-family:monospace;
+  }
+  .scroll-btns a:hover{background:var(--accent2);}
+  @media(max-width:900px){
+    .sidebar{position:static; width:auto; height:auto; border-right:none; border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; gap:6px;}
+    .sidebar-title,.sidebar-sub{width:100%;}
+    .wrap{margin-left:auto;}
+  }
+  section{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:26px 28px; margin-bottom:22px; scroll-margin-top:20px;
+  }
+  section h2{color:var(--accent2); font-size:1.35rem; margin-top:0; border-bottom:1px solid var(--border); padding-bottom:10px;}
+  section h3{color:var(--text); font-size:1.05rem; margin-bottom:6px}
+  p{color:var(--text)}
+  .muted{color:var(--muted)}
+  a{color:var(--link)}
+  code, .mono{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--code); padding:1px 6px; border-radius:4px; font-size:.88em; color:#d9e3ea;
+  }
+  pre{background:var(--code); border:1px solid var(--border); border-radius:10px; padding:16px; overflow-x:auto; font-size:.85rem;}
+  pre code{background:none; padding:0}
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.9rem}
+  th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2); font-weight:600}
+  tr:nth-child(even) td{background:#101318}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+  .card{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px 16px;}
+  .badge{
+    display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:10px;
+    background:#1d2a10; color:var(--accent2); border:1px solid #2e4118; margin-left:6px;
+  }
+  .badge.internal{background:#2a1a10; color:var(--warn); border-color:#4a3419}
+  ul{padding-left:20px}
+  li{margin-bottom:5px}
+  .footer{color:var(--muted); text-align:center; font-size:.8rem; margin-top:30px}
+  .callout{border-left:3px solid var(--accent); background:#0f150a; padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0; font-size:.92rem;}
+  .callout.warn{border-left-color:var(--warn); background:#191207}
+  svg{display:block; margin:16px auto; max-width:100%;}
+  .svgwrap{background:#0a0d10; border:1px solid var(--border); border-radius:10px; padding:16px;}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-title">gpu-burn &amp; DCGM Diag</div>
+  <div class="sidebar-sub">Public reference<br>compiled 2026-09-07</div>
+  <a href="#top">↑ Top</a>
+  <a href="#what">1 · What &amp; Why</a>
+  <a href="#how-runs">2 · How it Runs</a>
+  <a href="#config">3 · CLI Flags</a>
+  <a href="#variants">4 · Test Variants</a>
+  <a href="#measured">5 · How it's Measured</a>
+  <a href="#dcgm">6 · DCGM Diagnostics</a>
+  <a href="#resources">7 · Resources</a>
+  <a href="#run-guide">8 · How to Run</a>
+  <a href="#bottom">↓ Bottom</a>
+</nav>
+
+<div class="scroll-btns">
+  <a href="#top" title="Back to top">↑</a>
+  <a href="#bottom" title="Jump to bottom">↓</a>
+</div>
+
+<div class="wrap">
+
+<header class="hero" id="top">
+  <h1>gpu-burn &amp; DCGM Diagnostics</h1>
+  <p class="tag">GPU stress-test and burn-in tooling — compute+thermal+correctness stress before a card or node enters production — public reference, compiled 2026-09-07.</p>
+</header>
+
+<!-- 1. WHAT / WHY -->
+<section id="what">
+  <h2>1. What is gpu-burn, and why does it matter?</h2>
+  <p><strong>gpu-burn</strong> (<a href="https://github.com/wilicc/gpu-burn" target="_blank">github.com/wilicc/gpu-burn</a>, 2.3k stars, BSD-2-Clause) is Ville Timonen's original GPU stress-test tool — <code>wilicc</code> on GitHub is the original author, this is not a third-party fork. Released 2013. It forks one process per GPU, allocates a high percentage of GPU memory, and runs continuous cuBLAS matrix multiplications for a specified duration — while <strong>periodically validating results against a reference computation</strong> to catch silent data corruption (SDC), not just "does it run."</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Why it matters</h3>
+      <ul>
+        <li><strong>Pre-deployment burn-in</strong> — catches thermal throttling, marginal power delivery, and unstable/defective cards before they enter production.</li>
+        <li><strong>Catches silent data corruption</strong> — a GPU that runs hot but computes <em>wrong</em> answers is worse than one that visibly crashes; gpu-burn's correctness check is what catches this.</li>
+        <li><strong>A real production workflow, not just a one-time test</strong> — commonly run on a regular cadence and before returning repaired nodes to service.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Where it fits alongside NCCL &amp; HPL</h3>
+      <ul>
+        <li><strong>gpu-burn</strong> — single/multi-GPU compute + thermal + correctness stress (this page)</li>
+        <li><a href="nccl.html">NCCL tests</a> — interconnect/fabric health (ring/tree AllReduce busbw)</li>
+        <li><a href="hpl.html">HPL</a> — full-system sustained FLOPS at scale (power/cooling/interconnect combined)</li>
+        <li>Different scope, same goal: prove the hardware is production-ready before it's trusted with real workloads.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 2. HOW IT RUNS -->
+<section id="how-runs">
+  <h2>2. How it runs</h2>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+    <text x="450" y="24" text-anchor="middle" fill="#9fe870" font-family="monospace" font-size="15">gpu-burn per-GPU loop (one forked process per GPU)</text>
+
+    <rect x="60" y="55" width="180" height="50" rx="6" fill="#171b21" stroke="#7cc4ff" stroke-width="2"/><text x="150" y="85" text-anchor="middle" fill="#e6e9ee" font-family="monospace" font-size="12">Allocate GPU memory</text>
+    <path d="M 240 80 L 300 80" fill="none" stroke="#7cc4ff" stroke-width="2" marker-end="url(#gbArrow)"/>
+    <defs><marker id="gbArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#7cc4ff"/></marker></defs>
+
+    <rect x="300" y="55" width="220" height="50" rx="6" fill="#171b21" stroke="#76b900" stroke-width="2"/><text x="410" y="76" text-anchor="middle" fill="#e6e9ee" font-family="monospace" font-size="12">cuBLAS SGEMM/DGEMM</text><text x="410" y="92" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="10">continuous matrix multiply</text>
+    <path d="M 520 80 L 580 80" fill="none" stroke="#76b900" stroke-width="2" marker-end="url(#gbArrow)"/>
+
+    <rect x="580" y="55" width="240" height="50" rx="6" fill="#171b21" stroke="#f2b84b" stroke-width="2"/><text x="700" y="76" text-anchor="middle" fill="#e6e9ee" font-family="monospace" font-size="12">Compare vs reference</text><text x="700" y="92" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="10">compare.ptx — catches SDC</text>
+
+    <path d="M 700 105 L 700 150 L 410 150 L 410 105" fill="none" stroke="#9aa4b2" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#gbArrow)"/>
+    <text x="555" y="145" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="10">loop until duration elapses</text>
+
+    <text x="150" y="200" text-anchor="middle" fill="#e6e9ee" font-family="monospace" font-size="11">Every iteration reports:</text>
+    <text x="450" y="225" text-anchor="middle" fill="#9fe870" font-family="monospace" font-size="12">load% · GFLOPS · error count (must be 0) · temperature</text>
+    <text x="450" y="245" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">Nonzero errors = correctness failure, candidate for RMA — not a crash, a wrong-answer bug.</text>
+  </svg>
+  </div>
+  <p class="muted">Default precision is double (DGEMM) via <code>-d</code> — heavier thermal/power load, closer to worst-case realistic stress than single-precision. Runs on all visible GPUs simultaneously by default; <code>-i N</code> narrows to one GPU.</p>
+</section>
+
+<!-- 3. CLI FLAGS -->
+<section id="config">
+  <h2>3. CLI flags</h2>
+  <table>
+    <tr><th>Flag</th><th>Meaning</th></tr>
+    <tr><td><code>-m X</code></td><td>Allocate X megabytes of GPU memory</td></tr>
+    <tr><td><code>-m N%</code></td><td>Use N percent of available GPU memory</td></tr>
+    <tr><td><code>-d</code></td><td>Use doubles (DGEMM instead of SGEMM) — heavier thermal/power load</td></tr>
+    <tr><td><code>-tc</code></td><td>Attempt to use Tensor Cores (v1.1+, if hardware supports it)</td></tr>
+    <tr><td><code>-c FILE</code></td><td>Use FILE as the compare kernel (default: <code>compare.ptx</code>)</td></tr>
+    <tr><td><code>-l</code></td><td>List all GPUs detected in the system</td></tr>
+    <tr><td><code>-i N</code></td><td>Run the test exclusively on GPU N</td></tr>
+    <tr><td><code>-h</code></td><td>Display help</td></tr>
+    <tr><td><code>[TIME]</code></td><td>Trailing positional argument — duration to run, in seconds</td></tr>
+  </table>
+  <p class="muted">Build via <code>make</code>, with <code>COMPUTE=</code>, <code>CUDAPATH=</code>, <code>NVCCFLAGS=</code> for multi-arch targeting (e.g. <code>-gencode=arch=compute_90,code=sm_90</code> for Hopper).</p>
+</section>
+
+<!-- 4. VARIANTS -->
+<section id="variants">
+  <h2>4. Test variants</h2>
+  <div class="grid3">
+    <div class="card"><strong>Standard (SGEMM)</strong><p class="muted">Default precision. Lighter load than DGEMM.</p></div>
+    <div class="card"><strong>Double-precision (<code>-d</code>, DGEMM)</strong><p class="muted">The heaviest thermal/power load — closest to worst-case realistic stress. Most commonly used for real burn-in.</p></div>
+    <div class="card"><strong>Tensor Core (<code>-tc</code>)</strong><p class="muted">Uses Tensor Cores where supported (v1.1+) — stresses a different compute path than standard CUDA cores.</p></div>
+  </div>
+  <p class="muted">No distinct "quick smoke test" mode exists — duration is just the trailing seconds argument. In practice: short runs (60-300s) for smoke tests, multi-hour runs for real pre-production burn-in. No official NVIDIA NGC container was found for gpu-burn — only community/self-built Docker images from the repo's own Dockerfile.</p>
+</section>
+
+<!-- 5. MEASURED -->
+<section id="measured">
+  <h2>5. How results are measured</h2>
+  <p>Real sample output (sourced):</p>
+  <pre><code># Single GPU
+89.4%  proc'd: 2916 (2015 Gflop/s)   errors: 0   temps: 86 C
+
+# Multi-GPU
+11.7%  proc'd: 2947 (7124 Gflop/s) - 2664 (6963 Gflop/s)   errors: 0 - 0   temps: 56 C - 73 C</code></pre>
+  <table>
+    <tr><th>Field</th><th>Meaning</th></tr>
+    <tr><td>Load %</td><td>Progress through the current test cycle</td></tr>
+    <tr><td>proc'd</td><td>Number of matrix operations processed</td></tr>
+    <tr><td>Gflop/s</td><td>Achieved throughput — the headline performance number</td></tr>
+    <tr><td><strong>errors</strong></td><td><strong>Must be 0.</strong> Nonzero = correctness failure detected by the compare-vs-reference check — a real computational error under stress, not a crash. Flag the GPU for RMA.</td></tr>
+    <tr><td>temps</td><td>Per-GPU temperature during the run — watch for thermal throttling</td></tr>
+  </table>
+  <p>Final summary reports <strong>OK vs. FAULTY</strong> per GPU.</p>
+  <div class="callout warn">Honest gap: no sourced GFLOPS reference ranges for V100/A100/H100 specifically were found in this research pass — don't treat the sample numbers above as expected values for any particular GPU generation; they're just real example output.</div>
+</section>
+
+<!-- 6. DCGM -->
+<section id="dcgm">
+  <h2>6. DCGM Diagnostics — NVIDIA's official complement</h2>
+  <p><strong>DCGM Diagnostics</strong> (<code>dcgmi diag</code>, part of NVIDIA's Data Center GPU Manager, running NVVS underneath) is NVIDIA's own official stress-test/diagnostic tool — more tiered and more deeply documented internally than gpu-burn. Common practice pairs both: DCGM <code>-r 3</code> as the acceptance gate + gpu-burn as a complementary compute/correctness stress tool, with <code>-r 1</code> wired into the scheduler as job prologue/epilogue.</p>
+
+  <h3>Diagnostic levels — real timing data (8-GPU system)</h3>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg">
+    <text x="450" y="24" text-anchor="middle" fill="#9fe870" font-family="monospace" font-size="14">dcgmi diag level → typical duration (log scale)</text>
+
+    <text x="248" y="55" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">-r 1 (quick sanity)</text>
+    <rect x="256" y="43" width="20" height="20" fill="#7cc4ff"/><text x="285" y="58" fill="#e6e9ee" font-family="monospace" font-size="11">&lt;5 sec</text>
+
+    <text x="248" y="90" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">-r 2 (+PCIe/mem bw)</text>
+    <rect x="256" y="78" width="180" height="20" fill="#7cc4ff"/><text x="445" y="93" fill="#e6e9ee" font-family="monospace" font-size="11">&lt;15 min</text>
+
+    <text x="248" y="125" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">-r 3 (+sustained power/thermal)</text>
+    <rect x="256" y="113" width="320" height="20" fill="#76b900"/><text x="585" y="128" fill="#e6e9ee" font-family="monospace" font-size="11">&lt;40 min — common acceptance gate</text>
+
+    <text x="248" y="160" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">-r 4 (full, incl. HBM memtest)</text>
+    <rect x="256" y="148" width="450" height="20" fill="#76b900"/><text x="715" y="163" fill="#e6e9ee" font-family="monospace" font-size="11">2-2.5 hrs</text>
+
+    <text x="248" y="195" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">EUD Opportunistic (r4-style)</text>
+    <rect x="256" y="183" width="350" height="20" fill="#f2b84b"/><text x="615" y="198" fill="#e6e9ee" font-family="monospace" font-size="11">~30 min</text>
+
+    <text x="248" y="230" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">EUD p0only</text>
+    <rect x="256" y="218" width="500" height="20" fill="#f2b84b"/><text x="765" y="233" fill="#e6e9ee" font-family="monospace" font-size="11">~2 hrs</text>
+
+    <text x="248" y="265" text-anchor="end" fill="#e6e9ee" font-family="monospace" font-size="12">EUD full</text>
+    <rect x="256" y="253" width="640" height="20" fill="#f2b84b"/><text x="905" y="268" fill="#0d1117" font-family="monospace" font-size="11" font-weight="bold">9-10 hrs</text>
+
+    <text x="450" y="300" text-anchor="middle" fill="#9aa4b2" font-family="monospace" font-size="11">EUD = Extended User Diagnostics. Real measured timings from an 8-GPU system, not vendor spec claims.</text>
+  </svg>
+  </div>
+
+  <h3>Example commands</h3>
+  <pre><code># Quick pre-job sanity check (seconds)
+dcgmi diag -r 1
+
+# Standard acceptance gate (tens of minutes)
+dcgmi diag -r 3
+
+# Full diagnostic including HBM pattern testing (hours)
+dcgmi diag -r 4
+
+# Extended User Diagnostics — full run (9-10 hours)
+dcgmi diag -r eud -p "eud.passthrough_args='gpu_diag'"
+
+# EUD p0only variant (~2 hours)
+dcgmi diag -r eud -p "eud.passthrough_args='gpu_diag_p0only'"</code></pre>
+  <p class="muted">Source: <a href="https://docs.nvidia.com/datacenter/dcgm/latest/learn/modules/dcgm-diagnostics.html" target="_blank">NVIDIA DCGM Diagnostics docs</a>, <a href="https://github.com/NVIDIA/DCGM" target="_blank">github.com/NVIDIA/DCGM</a>.</p>
+</section>
+
+<!-- 7. RESOURCES -->
+<section id="resources">
+  <h2>7. Resources</h2>
+  <ul>
+    <li><a href="https://github.com/wilicc/gpu-burn" target="_blank">github.com/wilicc/gpu-burn</a> — the canonical repo (original author, 2.3k stars)</li>
+    <li><a href="http://wili.cc/blog/gpu-burn.html" target="_blank">wili.cc/blog/gpu-burn.html</a> — original author's own writeup</li>
+    <li>Notable forks: Microway/gpu-burn (2013-2016 derivative), kerwtsai-amd/amd-gpu-burn (HIP port for AMD GPUs)</li>
+    <li><a href="https://docs.nvidia.com/datacenter/dcgm/latest/learn/modules/dcgm-diagnostics.html" target="_blank">NVIDIA DCGM Diagnostics docs</a>, <a href="https://github.com/NVIDIA/DCGM" target="_blank">github.com/NVIDIA/DCGM</a></li>
+    <li><a href="https://www.together.ai/blog/a-practitioners-guide-to-testing-and-running-large-gpu-clusters-for-training-generative-ai-models" target="_blank">Together AI — A Practitioner's Guide to Testing and Running Large GPU Clusters</a> (covers combined DCGM+gpu-burn commissioning practice)</li>
+  </ul>
+</section>
+
+<!-- 8. RUN GUIDE -->
+<section id="run-guide">
+  <h2>8. How to run it</h2>
+  <h3>Build from source</h3>
+  <pre><code>git clone https://github.com/wilicc/gpu-burn.git
+cd gpu-burn
+make</code></pre>
+
+  <h3>Docker</h3>
+  <pre><code>docker build -t gpu-burn .
+docker run --rm --gpus all gpu-burn</code></pre>
+
+  <h3>Example runs</h3>
+  <pre><code># Quick smoke test — 60 seconds, default precision
+./gpu_burn 60
+
+# Real burn-in — 1 hour, double precision (heaviest load)
+./gpu_burn -d 3600
+
+# Target a specific GPU
+./gpu_burn -i 0 -d 3600
+
+# List detected GPUs first
+./gpu_burn -l</code></pre>
+  <p class="muted">Runs on all visible GPUs simultaneously by default (one forked process per GPU). Watch the periodic output lines (§5) — <strong>errors must stay at 0</strong> for the whole run; temps should stabilize, not climb continuously (continuous climb = thermal throttling / inadequate cooling).</p>
+</section>
+
+<div id="bottom" style="scroll-margin-top:20px;"></div>
+</div>
+
+</body>
+</html>

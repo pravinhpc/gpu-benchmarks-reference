@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nemotron — Complete Reference</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#12151a; --panel2:#171b21; --border:#242a33;
+    --text:#e6e9ee; --muted:#9aa4b2; --accent:#76b900; --accent2:#9fe870;
+    --link:#7cc4ff; --warn:#f2b84b; --code:#1a1f26;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text); margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 90px}
+  header.hero{
+    background:linear-gradient(135deg,#151a12,#0b0d10 70%);
+    border:1px solid var(--border); border-radius:16px;
+    padding:36px 32px; margin-bottom:28px;
+  }
+  header.hero h1{
+    margin:0 0 8px; font-size:2.2rem; letter-spacing:-0.02em;
+    color:var(--accent2);
+  }
+  header.hero p.tag{color:var(--muted); margin:0; font-size:1.05rem}
+  nav.toc{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;
+  }
+  nav.toc a{
+    font-size:.82rem; color:var(--text); background:var(--panel2);
+    border:1px solid var(--border); padding:6px 12px; border-radius:20px;
+    text-decoration:none; white-space:nowrap;
+  }
+  nav.toc a:hover{border-color:var(--accent); color:var(--accent2)}
+  section{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:26px 28px; margin-bottom:22px; scroll-margin-top:20px;
+  }
+  section h2{
+    color:var(--accent2); font-size:1.35rem; margin-top:0;
+    border-bottom:1px solid var(--border); padding-bottom:10px;
+  }
+  section h3{color:var(--text); font-size:1.05rem; margin-bottom:6px}
+  p{color:var(--text)}
+  .muted{color:var(--muted)}
+  a{color:var(--link)}
+  code, .mono{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--code); padding:1px 6px; border-radius:4px; font-size:.88em;
+    color:#d9e3ea;
+  }
+  pre{
+    background:var(--code); border:1px solid var(--border); border-radius:10px;
+    padding:16px; overflow-x:auto; font-size:.85rem;
+  }
+  pre code{background:none; padding:0}
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.9rem}
+  th,td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2); font-weight:600}
+  tr:nth-child(even) td{background:#101318}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  @media(max-width:720px){.grid2{grid-template-columns:1fr}}
+  .card{
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px;
+  }
+  .badge{
+    display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:10px;
+    background:#1d2a10; color:var(--accent2); border:1px solid #2e4118; margin-left:6px;
+  }
+  .badge.internal{background:#2a1a10; color:var(--warn); border-color:#4a3419}
+  ul{padding-left:20px}
+  li{margin-bottom:5px}
+  .footer{color:var(--muted); text-align:center; font-size:.8rem; margin-top:30px}
+  .callout{
+    border-left:3px solid var(--accent); background:#0f150a; padding:12px 16px;
+    border-radius:0 8px 8px 0; margin:14px 0; font-size:.92rem;
+  }
+  .callout.warn{border-left-color:var(--warn); background:#191207}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>NEMOTRON</h1>
+  <p class="tag">NVIDIA's open family of large language models — what it is, why it matters, how it's trained, evaluated, and run — public reference, compiled 2026-09-07.</p>
+  <nav class="toc">
+    <a href="#what">1 · What & Why</a>
+    <a href="#how-runs">2 · How it Runs</a>
+    <a href="#how-measures">3 · How it's Measured</a>
+    <a href="#family">4 · Model Family / Types</a>
+    <a href="#resources">5 · Resources & Papers</a>
+    <a href="#run-guide">6 · How to Run</a>
+  </nav>
+</header>
+
+<!-- 1. WHAT / WHY -->
+<section id="what">
+  <h2>1. What is Nemotron, and why does it matter?</h2>
+  <p><strong>Nemotron</strong> is NVIDIA's family of open large language models (LLMs) — spanning base/foundation models, instruction-tuned chat models, reward models, reasoning models, vision-language models, and hybrid Mamba-Transformer architectures. It is NVIDIA's flagship demonstration of the full <strong>NeMo</strong> software stack: data curation → pretraining → alignment (SFT/DPO/RLHF/RLVR) → evaluation → optimized inference (TensorRT-LLM / vLLM / NIM).</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Why it's important</h3>
+      <ul>
+        <li><strong>Openness</strong>: weights, and increasingly training data (e.g. Nemotron-CC, Nemotron-Post-Training-Dataset) and reasoning traces are released — unusual for a frontier-adjacent lab, aimed at enterprise/sovereign-AI customers who need auditable, customizable models.</li>
+        <li><strong>Reference architecture</strong>: proves out NVIDIA's own tools (NeMo Framework, NeMo Curator, NeMo Aligner/RL, Megatron-Bridge, NIM, TensorRT-LLM) end-to-end — what NVIDIA sells to enterprises, NVIDIA uses on itself first.</li>
+        <li><strong>Efficiency leadership</strong>: Nemotron-H and Nemotron-Nano use hybrid Mamba2/Transformer blocks for much cheaper long-context inference than pure-attention models of similar quality.</li>
+        <li><strong>Customization-first</strong>: designed to be fine-tuned/distilled by customers (enterprises, CSPs, NCPs) for domain use cases — not just used as-is.</li>
+        <li><strong>Commercial flywheel</strong>: distributed via <a href="https://build.nvidia.com" target="_blank">build.nvidia.com</a>, NIM microservices, and inference-provider/CSP partners — drives GPU consumption for both training and inference.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What it's used for</h3>
+      <ul>
+        <li>General chat / instruction following (Nemotron-Instruct)</li>
+        <li>Agentic reasoning &amp; tool use (Nemotron Nano/Super/Ultra reasoning models)</li>
+        <li>Reward modeling for RLHF pipelines (Nemotron-Reward)</li>
+        <li>Synthetic data generation (SDG) for training other models</li>
+        <li>Document parsing / OCR (Nemotron-Parse)</li>
+        <li>RAG &amp; retrieval (embeddings/rerankers in the Nemotron/NeMo Retriever family)</li>
+        <li>Domain fine-tuning by customers (e.g. enterprise NL→query-language use cases)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 2. HOW IT RUNS -->
+<section id="how-runs">
+  <h2>2. How it runs (training → inference pipeline)</h2>
+  <h3>Pipeline stages</h3>
+  <table>
+    <tr><th>Stage</th><th>What happens</th><th>NVIDIA tooling</th></tr>
+    <tr><td>1. Data curation</td><td>Web-scale crawl + filtering, dedup, quality classification, synthetic data generation for gaps</td><td>NeMo Curator, Nemotron-CC dataset, NeMo Data Designer</td></tr>
+    <tr><td>2. Pretraining</td><td>Dense Transformer or hybrid Mamba2-Transformer backbone trained on trillions of tokens across large GPU clusters</td><td>Megatron-LM / Megatron-Bridge, NeMo Framework, Slurm/BCM clusters</td></tr>
+    <tr><td>3. Alignment / post-training</td><td>SFT (full FT or LoRA), preference alignment (DPO/GRPO), RLVR (verifiable-reward RL for reasoning/agentic tasks), distillation from larger teacher models</td><td>NeMo Aligner → NeMo RL (successor), NeMo Gym (RL environments), NeMo Customizer microservice</td></tr>
+    <tr><td>4. Evaluation</td><td>Academic benchmarks, LLM-as-judge, human eval, safety/red-team eval, reasoning benchmarks</td><td>NeMo Evaluator SDK (OSS, lm-eval-harness based) &amp; NeMo Evaluator Microservice</td></tr>
+    <tr><td>5. Optimization &amp; deployment</td><td>Quantization (FP8/NVFP4), KV-cache/inference-engine tuning, packaging as containerized microservice</td><td>TensorRT-LLM, vLLM, SGLang, TensorRT Model Optimizer, NVIDIA NIM</td></tr>
+    <tr><td>6. Distribution</td><td>Publish weights + configs + model cards</td><td>Hugging Face Hub (org: <code>nvidia</code>), build.nvidia.com, NGC catalog</td></tr>
+  </table>
+
+  <h3>Compute / infra it runs on</h3>
+  <ul>
+    <li><strong>Training:</strong> large-scale multi-node GPU clusters (H100/H200/GB200 generations), Slurm or Kubernetes orchestration, NCCL for collective comms, checkpointing via Megatron/NeMo distributed checkpoint formats.</li>
+    <li><strong>Inference:</strong> served via NIM containers (Docker/Kubernetes/MiniKube), or directly with TensorRT-LLM / vLLM / SGLang engines; reasoning models expose a "thinking on/off" toggle affecting latency/quality tradeoff.</li>
+  </ul>
+</section>
+
+<!-- 3. HOW MEASURED -->
+<section id="how-measures">
+  <h2>3. How Nemotron is measured (evaluation)</h2>
+  <p>Two offerings do the heavy lifting for evaluation:</p>
+  <table>
+    <tr><th>Tool</th><th>NeMo Evaluator SDK (OSS)</th><th>NeMo Evaluator Microservice</th></tr>
+    <tr><td>Use case</td><td>Academic benchmarking</td><td>Agentic evaluation, LLM-as-judge, RAG</td></tr>
+    <tr><td>Benchmarks</td><td>100+ benchmarks</td><td>60+ academic benchmarks + custom</td></tr>
+    <tr><td>Deployment</td><td>Local or Slurm cluster</td><td>Docker / MiniKube / Kubernetes</td></tr>
+    <tr><td>Notes</td><td>24x faster / 22x simpler than prior tooling, open source</td><td>Modular, standard API, Developer/NVIE license</td></tr>
+  </table>
+
+  <h3>What gets measured</h3>
+  <div class="grid2">
+    <div class="card">
+      <h3>General capability</h3>
+      <ul>
+        <li>MMLU / MMLU-Pro (knowledge)</li>
+        <li>GSM8K, MATH (math reasoning)</li>
+        <li>HumanEval, MBPP (code)</li>
+        <li>MT-Bench, Arena-Hard, Chatbot Arena (chat quality, often LLM-as-judge)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Reasoning / agentic (Nano/Super/Ultra)</h3>
+      <ul>
+        <li>AIME, GPQA-Diamond (hard reasoning)</li>
+        <li>LiveCodeBench (agentic coding)</li>
+        <li>RULER (long-context retrieval/reasoning)</li>
+        <li>BFCL (function/tool calling)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Alignment / reward quality</h3>
+      <ul>
+        <li>RewardBench (reward-model quality)</li>
+        <li>HelpSteer2 / HelpSteer2-Preference derived metrics</li>
+        <li>Safety/red-team suites, bias &amp; toxicity checks</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Retrieval / RAG</h3>
+      <ul>
+        <li>Precision, recall, NDCG (retrieval models)</li>
+        <li>Faithfulness, answer relevancy — via RAGAS framework integration</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout">Evaluation is generally framed as <em>eval-driven customization</em>: baseline-eval → identify capability gap → decide whether to customize → train → re-evaluate on the same benchmark → validate real-world capability. This loop is the standard workflow recommended for anyone fine-tuning a Nemotron model.</div>
+</section>
+
+<!-- 4. FAMILY -->
+<section id="family">
+  <h2>4. Model family &amp; run types</h2>
+  <table>
+    <tr><th>Line</th><th>Description</th><th>Notable releases</th></tr>
+    <tr><td><strong>Nemotron-3</strong></td><td>Early NeMo-based foundation model</td><td>Nemotron-3-8B (2023)</td></tr>
+    <tr><td><strong>Nemotron-4</strong></td><td>Dense Transformer generation; base/instruct/reward variants; 9T-token pretrain; 98%+ synthetic alignment data; fits single DGX H100 (FP8)</td><td>Nemotron-4-15B, Nemotron-4-340B-Base/Instruct/Reward, Nemotron-Mini-4B-Instruct</td></tr>
+    <tr><td><strong>Minitron</strong></td><td>Structured pruning + knowledge-distillation recipe: derives a family of smaller models from one large parent at a fraction of training cost (~40x fewer tokens)</td><td>Llama-3.1-Minitron-4B (depth/width), Llama-3.1-Nemotron-51B-Instruct (NAS+distill from 70B, 2.2x faster on H100)</td></tr>
+    <tr><td><strong>Llama-Nemotron</strong></td><td>Post-trained variants of Llama checkpoints using NeMo Aligner (RLHF/DPO); first open models with a dynamic reasoning on/off toggle</td><td>Llama-3.1-Nemotron-70B-Instruct (topped RewardBench/Arena-Hard at launch), Llama-3.1-Nemotron-Nano-8B, Llama-3.3-Nemotron-Super-49B, Llama-3.1-Nemotron-Ultra-253B (76% GPQA-Diamond)</td></tr>
+    <tr><td><strong>Nemotron-H</strong></td><td>Hybrid Mamba2 + Transformer architecture for cheaper long-context inference; up to 3x faster than pure-Transformer at equal/better accuracy</td><td>Nemotron-H 8B/47B/56B, Nemotron Nano 2 (hybrid Mamba-Transformer reasoning)</td></tr>
+    <tr><td><strong>Nemotron 3 Nano / Super / Ultra</strong></td><td>Current flagship line (arXiv:2512.20856, published 24-Dec-2025, 350+ NVIDIA authors): Mixture-of-Experts hybrid Mamba-Transformer w/ LatentMoE + MTP layers, NVFP4 pretraining, up to 1M-token context, multi-environment RL post-training with granular reasoning-budget control; explicit "thinking on/off" toggle; open reasoning traces, RL environments &amp; recipes</td><td>Nemotron 3 Nano 31.6B total/3.6B active MoE (GTC, Mar-2026), Nemotron 3 Super 120B MoE (Mar-2026, optimized for collaborative agents/IT-ticket automation), Nemotron 3 Ultra 550B total/55B active MoE (4-Jun-2026, Computex; 1M context, 5.9x throughput vs GLM-5.1-754B)</td></tr>
+    <tr><td><strong>Nemotron 3.5 Lightning</strong></td><td>Successor to Nemotron 3 Nano; same hybrid Mamba-Transformer architecture, retuned for high-volume always-on agent tasks; released alongside <strong>NeMo Switchyard</strong> (open-source agent model router). Released under the OpenMDW-1.1 license (weights + training data + recipes)</td><td>30B MoE / 3B active (11-Aug-2026); +9pt Artificial Analysis Intelligence Index vs Nemotron 3 Nano; up to 4x output speed of similarly-sized models</td></tr>
+    <tr><td><strong>Nemotron-Parse</strong></td><td>Document parsing / OCR / layout understanding model</td><td>Nemotron-Parse</td></tr>
+    <tr><td><strong>NeMo Retriever</strong></td><td>Embedding &amp; reranking models often grouped in the same ecosystem</td><td>NV-Embed, NV-Rerank</td></tr>
+    <tr><td><strong>Nemotron Personas</strong></td><td>Synthetic persona datasets for grounding synthetic data generation</td><td>USA (6M), Japan (6M), India (21M) persona sets</td></tr>
+    <tr><td><strong>Nemotron-CC / Post-Training datasets</strong></td><td>Open pretraining/post-training data releases underlying the models; 6.3T-token refined Common Crawl corpus (classifier ensembling + synthetic rephrasing)</td><td>Nemotron-CC v1/v2/v2.1, Nemotron-Post-Training-Dataset</td></tr>
+    <tr><td><strong>Safety / NemoGuard</strong></td><td>Companion guard models + safety dataset/taxonomy for content-safety and jailbreak detection, red-teamed with NVIDIA's <code>garak</code> scanner</td><td>Aegis Content Safety Dataset v1-v3 (23 categories, 9 languages), Llama-3.1-Nemotron-Safety-Guard-8B v2/v3</td></tr>
+  </table>
+  <p class="muted">Naming/versioning moves fast — treat this table as a snapshot; check <a href="https://huggingface.co/nvidia" target="_blank">huggingface.co/nvidia</a> or build.nvidia.com for the current lineup.</p>
+</section>
+
+<!-- 5. RESOURCES -->
+<section id="resources">
+  <h2>5. Resources, papers, GitHub</h2>
+
+  <h3>Public GitHub repos</h3>
+  <ul>
+    <li><a href="https://github.com/NVIDIA-NeMo/Nemotron" target="_blank">github.com/NVIDIA-NeMo/Nemotron</a> — the developer asset hub: training recipes, usage cookbooks, datasets, end-to-end examples (start here)</li>
+    <li><a href="https://github.com/NVIDIA/Megatron-LM" target="_blank">github.com/NVIDIA/Megatron-LM</a> — core training engine (Megatron-Core): tensor/pipeline/sequence/expert parallelism at 1000s-of-GPU scale</li>
+    <li><a href="https://github.com/NVIDIA-NeMo/Megatron-Bridge" target="_blank">github.com/NVIDIA-NeMo/Megatron-Bridge</a> — HF checkpoint ↔ Megatron-Core training bridge</li>
+    <li><a href="https://github.com/NVIDIA/NeMo" target="_blank">github.com/NVIDIA/NeMo</a> — core NeMo Framework (pretraining/finetuning toolkit)</li>
+    <li><a href="https://github.com/NVIDIA-NeMo/RL" target="_blank">github.com/NVIDIA-NeMo/RL</a> — NeMo RL, post-training RL library (re-architected successor to NeMo-Aligner); GRPO/GSPO/DAPO, SFT+LoRA, DPO, on-policy distillation</li>
+    <li><a href="https://github.com/NVIDIA-NeMo/Switchyard" target="_blank">github.com/NVIDIA-NeMo/Switchyard</a> — NeMo Switchyard, open-source agent model router (Aug 2026) that dynamically routes each agent step across Nemotron/other models for cost/latency/quality tradeoffs</li>
+    <li><a href="https://github.com/NVIDIA/NeMo-Curator" target="_blank">github.com/NVIDIA/NeMo-Curator</a> — data curation at scale; built Nemotron-CC</li>
+    <li><a href="https://github.com/NVIDIA/NeMo-Skills" target="_blank">github.com/NVIDIA/NeMo-Skills</a> — reasoning-model training/eval recipes used for Nemotron reasoning releases</li>
+    <li><a href="https://github.com/NVIDIA/TensorRT-LLM" target="_blank">github.com/NVIDIA/TensorRT-LLM</a> — optimized inference engine</li>
+    <li><a href="https://github.com/NVIDIA/TensorRT-Model-Optimizer" target="_blank">github.com/NVIDIA/TensorRT-Model-Optimizer</a> — quantization (FP8/NVFP4) &amp; distillation</li>
+    <li><a href="https://github.com/NVIDIA-AI-Blueprints/safety-for-agentic-ai" target="_blank">github.com/NVIDIA-AI-Blueprints/safety-for-agentic-ai</a> — NemoGuard safety recipe blueprint</li>
+    <li><a href="https://github.com/EleutherAI/lm-evaluation-harness" target="_blank">github.com/EleutherAI/lm-evaluation-harness</a> — underlying eval harness used by NeMo Evaluator SDK</li>
+  </ul>
+
+  <h3>Model weights / cards</h3>
+  <ul>
+    <li><a href="https://huggingface.co/nvidia" target="_blank">huggingface.co/nvidia</a> — all published Nemotron checkpoints, datasets, model cards (see also the <a href="https://huggingface.co/collections/nvidia/nvidia-nemotron-v3" target="_blank">NVIDIA Nemotron v3 collection</a>)</li>
+    <li><a href="https://research.nvidia.com/labs/nemotron/" target="_blank">research.nvidia.com/labs/nemotron</a> — official NVIDIA Research Nemotron lab site; per-model project pages and technical report PDFs</li>
+    <li><a href="https://www.nvidia.com/en-us/ai-data-science/foundation-models/nemotron/" target="_blank">nvidia.com/.../foundation-models/nemotron</a> — product/marketing overview page (also at the <a href="https://www.nvidia.com/en-in/ai-data-science/foundation-models/nemotron/" target="_blank">en-in</a> locale)</li>
+    <li><a href="https://developer.nvidia.com/topics/ai/nemotron" target="_blank">developer.nvidia.com/topics/ai/nemotron</a> — dev blog index, technical deep-dives per release</li>
+    <li><a href="https://build.nvidia.com" target="_blank">build.nvidia.com</a> — hosted playground + NIM API endpoints for Nemotron models</li>
+    <li><a href="https://catalog.ngc.nvidia.com" target="_blank">NGC Catalog</a> — containerized NIM images</li>
+  </ul>
+
+  <h3>Third-party / community (not official NVIDIA)</h3>
+  <ul>
+    <li><a href="https://nemotron-ai.com/" target="_blank">nemotron-ai.com</a> — unofficial fan/informational site ("Not affiliated with NVIDIA Corporation" per its own footer); overview of Nano/Super/Ultra tiers, links onward to official HF/build.nvidia.com resources. Useful as a quick digest, not a primary source.</li>
+    <li><a href="https://github.com/hadyy01/nemotron-bench" target="_blank">github.com/hadyy01/nemotron-bench</a> — independent community benchmark dashboard (Streamlit/Plotly, MIT license) comparing Nemotron 3 Nano 4B (local via Ollama) vs. Nemotron 3 Super 120B (via NVIDIA NIM API) on throughput, latency, reasoning-token usage, and cost. Not an NVIDIA repo.</li>
+  </ul>
+
+  <h3>Key technical reports / papers</h3>
+  <ul>
+    <li>"Nemotron-4 15B Technical Report" — arXiv:2402.16819</li>
+    <li>"Nemotron-4 340B Technical Report" — <a href="https://arxiv.org/abs/2406.11704" target="_blank">arXiv:2406.11704</a></li>
+    <li>"Nemotron-CC: Transforming Common Crawl into a Refined Long-Horizon Pretraining Dataset" — <a href="https://arxiv.org/abs/2412.02595" target="_blank">arXiv:2412.02595</a></li>
+    <li>"HelpSteer2: Open-source dataset for training top-performing reward models" — <a href="https://arxiv.org/abs/2406.08673" target="_blank">arXiv:2406.08673</a> (92.0% RewardBench SOTA at release; code at NVIDIA/NeMo-Aligner)</li>
+    <li>"HelpSteer2-Preference: Complementing Ratings with Preferences" — <a href="https://arxiv.org/abs/2410.01257" target="_blank">arXiv:2410.01257</a></li>
+    <li>"Nemotron-H: A Family of Accurate and Efficient Hybrid Mamba-Transformer Models" — <a href="https://arxiv.org/abs/2504.03624" target="_blank">arXiv:2504.03624</a></li>
+    <li>"Llama-Nemotron: Efficient Reasoning Models" — <a href="https://arxiv.org/abs/2505.00949" target="_blank">arXiv:2505.00949</a> (Nano/Super/Ultra reasoning family)</li>
+    <li>"NVIDIA Nemotron Nano 2: Hybrid Mamba-Transformer Reasoning Model" — <a href="https://arxiv.org/abs/2508.14444" target="_blank">arXiv:2508.14444</a></li>
+    <li><strong>"NVIDIA Nemotron 3: Efficient and Open Intelligence"</strong> — <a href="https://arxiv.org/abs/2512.20856" target="_blank">arXiv:2512.20856</a> (published 24-Dec-2025) — the official technical report for the current Nano/Super/Ultra flagship family; 350+ authors</li>
+    <li>"Nemotron 3 Nano Omni: Efficient and Open Multimodal Intelligence" — <a href="https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Omni-report.pdf" target="_blank">NVIDIA report PDF</a> (Apr-2026)</li>
+    <li>"RULER: What's the Real Context Size of Your Long-Context Language Models?" — long-context eval methodology used on Nemotron</li>
+    <li>"Minitron" (pruning + distillation) — see NVIDIA developer blog + HF model cards</li>
+    <li>Search <a href="https://arxiv.org/a/nvidia" target="_blank">arXiv</a> for "Nemotron" for the current full list — new tech reports accompany each major release.</li>
+  </ul>
+
+  <h3>NVIDIA blog / dev posts</h3>
+  <ul>
+    <li>NVIDIA Developer Blog — search "Nemotron" for architecture deep-dives and release announcements</li>
+    <li>NVIDIA Technical Blog posts on NIM deployment of Nemotron models</li>
+    <li><a href="https://blogs.nvidia.com/blog/nemotron-lightning-switchyard-rtx-dgx/" target="_blank">blogs.nvidia.com — Nemotron 3.5 Lightning &amp; NeMo Switchyard launch post</a> (11-Aug-2026)</li>
+  </ul>
+
+  <h3>Books / courses</h3>
+  <p class="muted">No dedicated books exist on Nemotron specifically (it moves too fast for print) — the arXiv technical reports above are the closest thing to a canonical reference. For structured learning, NVIDIA's <a href="https://www.nvidia.com/en-us/training/" target="_blank">Deep Learning Institute (DLI)</a> periodically runs courses covering the NeMo Framework and LLM customization, and the NeMo Framework docs' tutorials/notebooks (linked below) are the most current hands-on material.</p>
+</section>
+
+<!-- 6. RUN GUIDE -->
+<section id="run-guide">
+  <h2>6. How to run this test / model</h2>
+
+  <h3>A. Quick inference test (no infra needed)</h3>
+  <pre><code># Via build.nvidia.com hosted API (get an NVIDIA API key first)
+curl https://integrate.api.nvidia.com/v1/chat/completions \
+  -H "Authorization: Bearer $NVIDIA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+    "messages": [{"role":"user","content":"Explain Nemotron in one paragraph."}]
+  }'</code></pre>
+
+  <h3>B. Local/self-hosted inference (NIM)</h3>
+  <pre><code># Pull and run a Nemotron NIM container (requires NGC API key + GPU)
+docker login nvcr.io
+docker run --gpus all -p 8000:8000 \
+  -e NGC_API_KEY=$NGC_API_KEY \
+  nvcr.io/nim/nvidia/llama-3.1-nemotron-70b-instruct:latest</code></pre>
+
+  <h3>C. Run evaluation benchmarks (NeMo Evaluator SDK, OSS)</h3>
+  <pre><code>pip install nemo-evaluator   # or clone from GitHub NVIDIA-NeMo org
+# Point at a served endpoint (NIM, vLLM, or local checkpoint) and a benchmark suite
+nemo-evaluator run \
+  --model_endpoint http://localhost:8000/v1 \
+  --benchmark mmlu,gsm8k,humaneval,arena_hard \
+  --output_dir ./eval_results</code></pre>
+
+  <h3>D. Fine-tune / customize</h3>
+  <ol>
+    <li>Establish baseline: run OOTB Nemotron on your target benchmark/eval set.</li>
+    <li>Identify capability gap → decide SFT (LoRA/full) vs DPO vs RLVR vs distillation based on the "learning signal" you have (labeled data, pairwise preferences, verifiable success, or a teacher model).</li>
+    <li>Pick framework: <code>AutoModel</code> for broad/easy day-0 support at &lt;1000 GPUs; <code>Megatron-Bridge</code> for max throughput at &gt;1000 GPUs.</li>
+    <li>Generate synthetic data if scarce (NeMo Data Designer) or apply privacy protection (NeMo Safe Synthesizer) if handling sensitive data.</li>
+    <li>Train (NeMo RL / NeMo Customizer microservice for a single-API-call path).</li>
+    <li>Re-run the same benchmark to measure improvement; validate on real-world task before shipping.</li>
+  </ol>
+
+  <div class="callout warn">Reasoning-model specific gotcha: agentic/coding harnesses that don't support custom request flags (e.g. Cursor) can mis-parse "thinking" vs normal output if the closing think-tag is malformed — check for a runtime reasoning-parser flag / updated vLLM·TRT-LLM·SGLang build before benchmarking coding-agent tasks on Nemotron Super/Ultra.</div>
+</section>
+
+</div>
+</body>
+</html>
